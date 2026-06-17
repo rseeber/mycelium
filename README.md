@@ -2,7 +2,11 @@
 
 ## Prerequisites
 
-This project has 3 moving parts: the web app (the user dashboard where you can edit your webpage), the API (which is how the web app can modify real data), and the deployed site (which can be deployed using any HTTP mechanism of your choosing).
+This project has 3 moving parts: 
+
+1. the web app (the user dashboard where you can edit your webpage), 
+2. the API (which is how the web app can modify real data), 
+3. and the deployed site (which can be deployed using any HTTP mechanism of your choosing).
 
 You will need to install some `npm` packages into the web app, as well as into the source folder for the deployed sites.
 
