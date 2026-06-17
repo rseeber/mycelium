@@ -39,6 +39,16 @@ def getTemplateIndices(frontMatter: str):
     end = frontMatter.find("\n", start)
     return start, end
 
+
+@app.put("/create/{site}/{page:path}")
+def create_page(site: str, page: str, fileContents: dict):
+    path = f"src/{site}/{page}"
+    if os.path.isfile(path):
+        # that's an error, don't proceed
+        raise HTTPException(status_code=409, detail="This resource already exists")
+    # call update page in order to create the file
+    return update_page(site, page, fileContents)
+
 # This API either creates a new page, or updates an existing page
 # you only need to pass in a dictionary containing
 # "frontMatter" and "content". All other fields are unused.

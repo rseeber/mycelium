@@ -1,21 +1,41 @@
 import React, { createRef } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './MDXEditor'
+import { EditorApp_Full, EditorApp_Plaintext } from './MDXEditor'
 import './style.css'
 
 let site;
-let page = "index.md";
+let currentPage = "index.md";
 let apiStem = "http://localhost:8000";
 
 
 // this snippet injects the MDXEditor into the web app
 const ref = createRef();
-createRoot(document.getElementById('MDXEditorWindow')).render(
-    <>
-        <App editorRef={ref} />
-        <button onClick={() => savePage()}>Upload</button>
-    </>
-);
+
+function spawnEditor_full(startingMd=""){
+    createRoot(document.getElementById('MDXEditorWindow')).render(
+        <>
+            <EditorApp_Full editorRef={ref} startingMd={startingMd} />
+            <button onClick={() => savePage()}>Save!</button>
+        </>
+    );
+}
+function spawnEditor_plaintext(startingMd=""){
+    createRoot(document.getElementById('MDXEditorWindow')).render(
+        <>
+            <EditorApp_Plaintext editorRef={ref} startingMd={startingMd} />
+            <button onClick={() => savePage()}>Save!</button>
+        </>
+    );
+}
+
+function spawnEditor(content){
+    if(currentPage.endsWith(".md")){
+        spawnEditor_full(content);
+    }
+    else{
+        spawnEditor_plaintext(content);
+    }
+}
 
 let startingVals;
 
@@ -55,7 +75,7 @@ window.setSite = setSite;   //accessible via html
 function switchPage(newPage){
     //save current buffer
     savePage();
-    page = newPage;
+    currentPage = newPage;
     //load the new page into the buffer
     loadPage();
 }
@@ -81,10 +101,11 @@ function loadPage(){
     // decide which page on the site to download
     // (need to make this dynamic later)
     //let page = "index.md";
-    document.getElementById("page_title").innerHTML = page;
+    document.getElementById("page_title").innerHTML = currentPage;
+
 
     //fetch the page via the API
-    fetch("http://localhost:8000/site/"+site+"/"+page)
+    fetch("http://localhost:8000/site/"+site+"/"+currentPage)
     .then(function(response) {
         return response.json();
     })
@@ -92,19 +113,27 @@ function loadPage(){
     .then(function(data){
         let content = data["content"];
         let frontMatter = data["frontMatter"];
+        let template = data["templateName"];
 
         // we cache this so we can diff against it when we upload, 
         // saving on network bandwidth
         startingVals = {
             "content": content, 
             "frontMatter": frontMatter, 
-            "template": data["templateName"]
+            "template": template
         };
+
+        //get the template selector set up right
+        document.getElementById("template_selector").value = template;
 
         // save the frontMatter for later when we upload
         document.getElementById("frontMatter").value = frontMatter;
 
-        ref.current?.setMarkdown(content);
+        spawnEditor(content);
+
+        //ref.current?.setMarkdown(content);
+        //ref.current?.diffMarkdown(content);
+        //ref.current?.setDiffMarkdown?.('A different older version');
     });
 }
 
@@ -134,7 +163,7 @@ function savePage(){
     // (this also needs to be dynamic eventually)
     //let page = "index.md";
     //send an `update_page` API to the server
-    fetch("http://localhost:8000/update/"+site+"/"+page, {
+    fetch("http://localhost:8000/update/"+site+"/"+currentPage, {
         method: "PUT",
         content: "application/text+json",
         headers: {
@@ -143,12 +172,50 @@ function savePage(){
         body: JSON.stringify(data),
     }).then(function(response){
         console.log(response);
+        spawnEditor(content);
     });
+}
 
+function createChildPage(){
+    // get the current scope
+    // remove the file from the  overall path of where we're currently at
+    let path = ("/"+currentPage).replace(/\/([^\/]*)$/, "");
+    let pageEnding = currentPage.substring(currentPage.search(/\/([^\/]*)$/, ""));
 
+    console.log(path);
+
+    createPage(path);
+
+}
+window.createChildPage = createChildPage;
+
+function createPage(path){
+    let filename = window.prompt("Please enter a filename, including file extension (.md, .html, etc)")
+    if (filename == null) {
+        return;
+    }
+
+    let frontMatter = "";
+    if(filename.endsWith(".md")){
+        frontMatter = "---\ntitle: myPage\nlayout: \n---";
+    }
+    let data = {"content": "", "frontMatter": frontMatter};
+
+    fetch(apiStem+"/create/"+site+"/"+path+"/"+filename, {
+        method: "PUT",
+        content: "application/text+json",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    }).then(function(response){
+        handleFileIndex();
+    })
 }
 
 function handleFileIndex(){
+    // first clear out the existing index
+    document.getElementById("file_explorer_list").innerHTML = "";
     getFileIndex_andApply();
 }
 
@@ -170,6 +237,9 @@ function applyFileIndex_recursive(index, ul){
     console.log(index);
     for (var file in index) {
         let cleanFile = file.substring(1);
+        if (cleanFile == "eleventy.config.js" || cleanFile == "_data" || cleanFile == "_includes"){
+            continue;
+        }
         let li = document.createElement("li");
         li.setAttribute("onclick", "switchPage('"+cleanFile+"');");
         li.innerHTML = file.substring(file.search(/\/([^\/]*)$/) + 1);

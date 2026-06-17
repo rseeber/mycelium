@@ -3,7 +3,7 @@ __pycache__/
 
 */node_modules/
 
-/src/*
-/dist/*
+websites/src/*
+websites/dist/*
 
-!/src/package.json
+!websites/src/package.json

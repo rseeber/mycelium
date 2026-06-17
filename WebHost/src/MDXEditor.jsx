@@ -1,5 +1,5 @@
 import React, { createRef } from 'react'
-import { MDXEditor  } from '@mdxeditor/editor'
+import { diffSourcePlugin, DiffSourceToggleWrapper, MDXEditor  } from '@mdxeditor/editor'
 import { headingsPlugin, UndoRedo, BoldItalicUnderlineToggles, 
   toolbarPlugin, quotePlugin, listsPlugin, thematicBreakPlugin, 
   linkPlugin, linkDialogPlugin, BlockTypeSelect, CreateLink, 
@@ -7,12 +7,12 @@ import { headingsPlugin, UndoRedo, BoldItalicUnderlineToggles,
 
 import '@mdxeditor/editor/style.css'
 
-function App({ editorRef }) {
+function EditorApp_Full({ editorRef, startingMd }) {
   return (
   <>
     <MDXEditor
       ref={editorRef}
-      markdown="# Hello"
+      markdown={startingMd}
       plugins={[
         toolbarPlugin({
           toolbarClassName: 'my-classname',
@@ -23,8 +23,17 @@ function App({ editorRef }) {
               <BoldItalicUnderlineToggles />
               <CreateLink />
               <CodeToggle />
+              <DiffSourceToggleWrapper>
+                <UndoRedo />
+              </DiffSourceToggleWrapper>
+
             </>
           )
+        }),
+        diffSourcePlugin({ 
+          diffMarkdown: startingMd, 
+          viewMode: "rich-text",
+          readOnlyDiff: true
         }),
         headingsPlugin(),
         quotePlugin(),
@@ -39,5 +48,27 @@ function App({ editorRef }) {
 
 }
 
+function EditorApp_Plaintext({ editorRef, startingMd }) {
+  return (
+  <>
+    <MDXEditor
+      ref={editorRef}
+      markdown={startingMd}
+      plugins={[
+        toolbarPlugin({
+          toolbarClassName: 'my-classname',
+          toolbarContents: () => (
+            <>
+            </>
+          )
+        }),
+      ]}
+    />
+  </>
+  )
 
-export default App
+}
+
+
+export { EditorApp_Full };
+export { EditorApp_Plaintext };
