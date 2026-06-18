@@ -6,4 +6,7 @@ __pycache__/
 websites/src/*
 websites/dist/*
 
+!websites/src/exampleSite/_includes/
+!websites/src/exampleSite/_data/
+
 websites/package-lock.json
