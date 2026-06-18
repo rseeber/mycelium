@@ -1,5 +1,7 @@
 ---
-title: myPage
-layout: 
+title: Blog
+layout: default.html
 ---
-Hello world
+## Posts
+
+[post 1](post-1/)

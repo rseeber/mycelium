@@ -17,15 +17,25 @@
           <label for="site">Site Name:</label><br>
           <input type="text" id="site" name="site">
           <input type="button" onclick="setSite()" value="Submit">
+          <label for="default_template">&emsp;&emsp;Default Template: </label>
+          <select id="default_template">
+            <!-- Insert options via JS here -->
+          </select>
+          <input type="button" onclick="setDefaultTemplate()" value="Select">
         </div>
     </form>
     <hr>
-    <form>
+    <form id="template_form">
       <label for="template_selector">Template: </label>
       <select name="template" id="template_selector">
         <!-- Insert options via JS here -->
       </select>
-      <input type="button" onclick="setTemplate()" value="Submit">
+      <input type="button" onclick="setTemplate()" value="Select"><br>
+    </form>
+    <form id="title_form">
+      <label for="title">Title: </label>
+      <input type="text" id="title">
+      <input type="button" onclick="setTitle()" value="Select">
     </form>
     <hr>
 

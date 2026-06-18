@@ -52,19 +52,8 @@ function setSite() {
         return response.json()
     }).then(function(data){
         let templates = data["templates"];
-        for (let i = 0; i < templates.length; i++) {
-            // the filename of the template
-            const template = templates[i];
-            // filename without extension (.md, .html)
-            let template_stripped = template.replace(/\.[^/.]+$/, ""); // https://stackoverflow.com/a/4250408
-            // create an html node for this option
-            let opt = document.createElement("option");
-            opt.value = template;
-            opt.innerHTML = template_stripped;
-            // append this option to the list in the selector
-            document.getElementById("template_selector").appendChild(opt);
-        }
-
+        prefillTemplateSelector(templates, "template_selector");
+        prefillTemplateSelector(templates, "default_template", true);
 
         //after selecting which site to edit, we load the homepage contents 
         // for the site into the buffer
@@ -76,7 +65,34 @@ function setSite() {
 }
 window.setSite = setSite;   //accessible via html
 
+
+function prefillTemplateSelector(templates, selectorID, excludeDefault=false) {
+    for (let i = 0; i < templates.length; i++) {
+        // the filename of the template
+        const template = templates[i];
+        // filename without extension (.md, .html)
+        let template_stripped = template.replace(/\.[^/.]+$/, ""); // https://stackoverflow.com/a/4250408
+
+        // don't add the "default" option if we're not supposed to
+        if(excludeDefault && template_stripped == "default"){
+            continue;
+        }
+
+        // create an html node for this option
+        let opt = document.createElement("option");
+        opt.value = template;
+        opt.innerHTML = template_stripped;
+        // append this option to the list in the selector
+        document.getElementById(selectorID).appendChild(opt);
+    }
+}
+
+
 function switchPage(newPage){
+    // if we're not changing anything, don't waste the network or compute resources
+    if(newPage == currentPage){
+        return;
+    }
     //save current buffer
     savePage();
     currentPage = newPage;
@@ -133,7 +149,11 @@ function loadPage(){
         // save the frontMatter for later when we upload
         document.getElementById("frontMatter").value = frontMatter;
 
-        console.log(content);
+        // load the default template value in the input box
+        loadDefaultTemplate();
+
+        // set the title inside the little textbox
+        loadTitle(getFrontMatterValue("title"));
 
         spawnEditor(content);
 
@@ -151,11 +171,80 @@ function setTemplate(){
     // get the old frontMatter
     let frontMatter = document.getElementById("frontMatter").value;
     // update the frontMatter to use the new template
-    frontMatter = frontMatter.replace(/(?<=layout: ).+/, template);
+    frontMatter = frontMatter.replace(/(?<=layout: ).*/, template);
     // overwrite our saved value (in the hidden input) for the frontMatter
     document.getElementById("frontMatter").value = frontMatter;
 }
 window.setTemplate = setTemplate;
+
+function loadDefaultTemplate(){
+    //get the template selection box
+    let defaultTemplate = document.getElementById("default_template");
+
+    fetch(apiStem+"/meta/default_template/"+site, {
+        method : "GET",
+    }).then(response => response.text()
+    ).then(function(data){
+        data = data.replace(/"/g, "")
+        defaultTemplate.value = data;
+    })
+}
+
+function setDefaultTemplate(){
+    //get the template selection box
+    let defaultTemplate = document.getElementById("default_template").value;
+
+    fetch(apiStem+"/meta/default_template/"+site, {
+        method : "PUT",
+        body: JSON.stringify({"template": defaultTemplate}),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+}
+window.setDefaultTemplate = setDefaultTemplate;
+
+function setTitle(){
+    let title = document.getElementById("title").value;
+    editFrontMatter("title", title);
+}
+window.setTitle = setTitle;
+
+function loadTitle(title){
+    document.getElementById("title").value = title;
+}
+
+function editFrontMatter(key, value){
+    // get the old frontMatter
+    let frontMatter = document.getElementById("frontMatter").value;
+    // create the dynamic regex to find and replace the value at the key
+    var regex = new RegExp("(?<="+key+": ).*") // equiv to /(?<=key: ).*/
+    // if the key doesn't exist, append it
+    if(!regex.test(frontMatter)){
+        frontMatter += key+": "+value;
+    }
+    // otherwise, update it
+    else{
+        // update the frontMatter to use the new template
+        frontMatter = frontMatter.replace(regex, value);
+    }
+    // overwrite our saved value (in the hidden input) for the frontMatter
+    document.getElementById("frontMatter").value = frontMatter;
+}
+
+function getFrontMatterValue(key){
+    // get the frontMatter
+    let frontMatter = document.getElementById("frontMatter").value;
+    // create the dynamic regex to find and replace the value at the key
+    var regex = new RegExp("(?<="+key+": ).*") // equiv to /(?<=key: ).*/
+    // if the key doesn't exist, return null
+    if(!regex.test(frontMatter)){
+        return null
+    }
+    // return the first match
+    return frontMatter.match(regex)[0];
+
+}
 
 //upload the page to the server
 function savePage(){
@@ -177,7 +266,6 @@ function savePage(){
         },
         body: JSON.stringify(data),
     }).then(function(response){
-        console.log(response);
         spawnEditor(content);
     });
 }
@@ -185,12 +273,10 @@ function savePage(){
 function createChildPage(){
     // get the current scope
     // remove the file from the  overall path of where we're currently at
-    console.log(currentPage);
     let path = ("/"+currentPage).replace(/\/([^\/]*)$/, "");
     if(!path.startsWith("/")){
         path = "/"+path;
     }
-    console.log(path);
     let pageEnding = currentPage.substring(currentPage.search(/\/([^\/]*)$/, ""));
 
     // parentFolder is the fullpath of the current file, just without 
@@ -202,25 +288,29 @@ function createChildPage(){
 
     console.log(parentFolder);
 
-    createPage(parentFolder);
-
-    //move the parent to be the index of the new folder
-    if(!currentPage.endsWith("index.md")){
-        let parentFile = currentPage;
-        let destination = site+parentFolder+"/index.md";
-        console.log(parentFile);
-        console.log(destination);
-        //move 'parentFile' to be called 'destination'
-        fetch(apiStem+"/move/"+site+"/"+parentFile, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({"destination": destination}),
-        }).then(function(response){
+    // this performs a fetch and creates the page
+    createPage(parentFolder).then(function(){
+        if(currentPage.endsWith("index.md")){
             handleFileIndex();
-        })
-    }
+        }
+        //move the parent to be the index of the new folder
+        else{
+            let parentFile = currentPage;
+            let destination = site+parentFolder+"/index.md";
+            //move 'parentFile' to be called 'destination'
+            fetch(apiStem+"/move/"+site+"/"+parentFile, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({"destination": destination}),
+            }).then(function(response){
+                
+                handleFileIndex();
+            })
+        }
+    });
+
 
 }
 window.createChildPage = createChildPage;
@@ -233,11 +323,11 @@ function createPage(path){
 
     let frontMatter = "";
     if(filename.endsWith(".md")){
-        frontMatter = "---\ntitle: myPage\nlayout: \n---";
+        frontMatter = "title: myPage\nlayout: default.html\n";
     }
     let data = {"content": "", "frontMatter": frontMatter};
 
-    fetch(apiStem+"/create/"+site+path+"/"+filename, {
+    return fetch(apiStem+"/create/"+site+path+"/"+filename, {
         method: "PUT",
         //content: "application/text+json",
         headers: {

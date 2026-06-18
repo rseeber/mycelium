@@ -17,9 +17,9 @@ def get_page(site: str, page: str):
 
     # get a version of the md without the frontmatter
     # we will call this version 'content'
-    frontMatterEnd = md.find("---", 3) + len("---")
-    frontMatter = md[:frontMatterEnd]
-    content = md[frontMatterEnd:]
+    frontMatterEnd = md.find("---\n", 4)
+    frontMatter = md[4:frontMatterEnd]
+    content = md[frontMatterEnd+4:]
 
 
     # Pull the template name from the liquid header info
@@ -72,7 +72,7 @@ def update_page(site: str, page: str, update: dict):
     frontMatter = update["frontMatter"]
     content = update["content"]
     # construct md by combining the two objects
-    md = f"{frontMatter}\n{content}"
+    md = f"---\n{frontMatter}---\n{content}"
 
     path = f"src/{site}/{page}"
     # first, create the page if it doesn't exist yet
@@ -84,7 +84,6 @@ def update_page(site: str, page: str, update: dict):
     with open(path, "w") as f:
         f.write(md)
 
-    return
 
 @app.put("/publish/{site}")
 def publish_site(site: str):
@@ -121,6 +120,30 @@ def set_template(site: str, page: str, newTemplate: str):
     frontMatter = f"{frontMatter[:start]}{newTemplate}{frontMatter[end:]}"
     # update the source file with our new frontMatter
     update_page(site, page, {"content": content, "frontMatter": frontMatter})
+
+@app.put("/meta/default_template/{site}")
+def set_default_template(site: str, opt: dict):
+    template = opt["template"]
+    """
+    # this assumes the file already exists, and it fully overwrites it
+    with open(f"src/{site}/_data/layout.js", "w") as f:
+        f.write(f"module.exports = \"{template}\"")
+    """
+    set_template(site, "_includes/default.html", template)
+
+    
+
+@app.get("/meta/default_template/{site}")
+def get_default_template(site: str):
+    # this assumes the file already exists, and it fully overwrites it
+    with open(f"src/{site}/_data/layout.js", "r") as f:
+        file = f.read()
+    m = re.search(r"(?<=(module\.exports = \")).+(?<!\")", file)
+    if m:
+        return m.group()
+    else:
+        return m
+
 
 
 @app.get("/meta/index/{site}")

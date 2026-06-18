@@ -1,5 +1,11 @@
 ---
-title: balh
-layout: mochalatte.html
+title: Home
+layout: default.html
 ---
-# Thing
+<u>**Links:**</u>
+
+[blog](/blog)
+
+[about](/about)
+
+[sib](/sib)

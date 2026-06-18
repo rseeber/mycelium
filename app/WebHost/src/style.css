@@ -7,6 +7,10 @@
     margin: 0.5em;
 }
 
+form {
+    margin: 0.5em;
+}
+
 #meta_form {
     display: block;
 }
