@@ -2,7 +2,7 @@
 title: Home
 layout: mochalatte.html
 ---
-<u>**Links:**</u>
+**Links:**
 
 [blog](/blog)
 
@@ -10,6 +10,8 @@ layout: mochalatte.html
 
 [sib](/sib)
 
-
-
 thing
+
+boom
+
+*hello*

@@ -1,6 +1,6 @@
 var editor;
 document.addEventListener('DOMContentLoaded', () => {
-    editor = new MarkdownWYSIWYG('myMarkdownEditor', {
+    editor = new MarkdownWYSIWYG('site_editor', {
         initialValue: "## Hello World!\n\nThis is **Markdown** content.",
         onUpdate: (markdownContent) => {
         console.log("Updated content:", markdownContent);

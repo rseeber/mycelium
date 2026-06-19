@@ -71,7 +71,9 @@ function spawnEditor_plaintext(startingMd=""){
 
 }
 
-function spawnEditor(content){
+function setEditorValue(content, isInitial=false){
+
+    frameWindow.editor.setValue(content, isInitial);
 
     frameWindow.foo = () => {
         console.log("within the iframe: ", window);
@@ -110,6 +112,9 @@ function spawnEditor(content){
     */
 }
 
+function getEditorValue(){
+    return frameWindow.editor.getValue();
+}
 
 // set the name for the site. This function allows 
 // you to swap between which site is selected. It does not rename your site.
@@ -211,24 +216,22 @@ function loadTemplate(){
         let markedScript = myDoc.createElement("script");
         // marked is a dependency of the editor
         markedScript.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
-
+        // this is the editor itself
         let editorScript = myDoc.createElement("script");
         editorScript.src = "/src/editor.js";
-
+        // this is the script that loads the editor in
         let callScript = myDoc.createElement("script");
         callScript.src = "/src/spawn_editor.jsx";
-        /*
-        callScript.textContent = `const editor = new MarkdownWYSIWYG('editor_window', {
-            initialValue: "## Hello World!\\n\\nThis is **Markdown** content.",
-            onUpdate: function(markdownContent) {
-                console.log("Updated content:", markdownContent);
-            }
-        });
-        `;
-        */
+        
+        //we also need to import the stylesheet for the editor
+        let sheet = myDoc.createElement("link");
+        sheet.rel = "stylesheet";
+        sheet.href = "/src/editor.css";
+
         myDoc.head.appendChild(markedScript);
         myDoc.head.appendChild(editorScript);
         myDoc.head.appendChild(callScript);
+        myDoc.head.appendChild(sheet);
         
         // Source - https://stackoverflow.com/a/35917295
         templateHTML = new XMLSerializer().serializeToString(myDoc);
@@ -249,11 +252,14 @@ function loadTemplate(){
                 frame = myFrame.contentDocument;
                 frameWindow = myFrame.contentWindow;
                 //append the stylesheet for the MDXEditor
+                /*
                 const sheet = new frameWindow.CSSStyleSheet();
                 sheet.replaceSync(MDX_stylesheet);
                 frame.adoptedStyleSheets = [...frame.adoptedStyleSheets, sheet];
+                */
 
-                console.log(frameWindow.editor.getValue());
+                // give the frame access to functions it needs
+                frameWindow.savePage = savePage;
 
                 //import the script to spawn the editor
                 //let script = frame.createElement("script");
@@ -351,7 +357,7 @@ function loadPage(){
         // load the template html into the iframe
         loadTemplate()
         .then(function(){
-            spawnEditor(content);
+            setEditorValue(content, true);
         });
 
         //ref.current?.setMarkdown(content);
@@ -448,7 +454,7 @@ function savePage(){
     // get the hidden frontMatter
     let frontMatter = document.getElementById("frontMatter").value;
     // get the content from the text editor
-    let content = ref.current?.getMarkdown();
+    let content = getEditorValue();
     let data = {"content": content, "frontMatter": frontMatter};
 
     // get the specific page we're editing
@@ -463,7 +469,7 @@ function savePage(){
         },
         body: JSON.stringify(data),
     }).then(function(response){
-        spawnEditor(content);
+        //fillEditor(content);
     });
 }
 
