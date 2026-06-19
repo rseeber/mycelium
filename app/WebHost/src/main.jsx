@@ -6,6 +6,7 @@ import { EditorApp_Full, EditorApp_Plaintext } from './MDXEditor'
 import editor_paste_in from "./resources/editor_paste_in.html?raw"
 import floating_bar_stylesheet from "./style_visual.css?raw"
 import floating_bar from "./resources/floating_bar.html?raw"
+import MDX_stylesheet from '@mdxeditor/editor/style.css?raw'
 
 let site;
 let currentPage = "index.md";
@@ -17,19 +18,21 @@ let startingVals = {};
 const ref = createRef();
 let root;
 
+let frame;
+
 
 // init shadow root
 //const shadowHost = document.getElementById('shadow_host');
 //const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
-const sheet = new CSSStyleSheet();
-sheet.replaceSync(floating_bar_stylesheet);
+//const sheet = new CSSStyleSheet();
+//sheet.replaceSync(floating_bar_stylesheet);
 
-const host = document.querySelector("#host");
+//const host = document.querySelector("#host");
 
-const shadow = host.attachShadow({ mode: "open" });
+//const shadow = host.attachShadow({ mode: "open" });
 
-shadow.innerHTML = floating_bar;
-shadow.adoptedStyleSheets = [sheet];
+//shadow.innerHTML = floating_bar;
+//shadow.adoptedStyleSheets = [sheet];
 
 //this bit is just to initialize everything
 setSite();
@@ -40,7 +43,7 @@ function spawnEditor_full(startingMd=""){
             <EditorApp_Full editorRef={ref} startingMd={startingMd} />
             <button onClick={() => savePage()}>Save!</button>
         </>
-    createRoot(document.getElementById('MDXEditorWindow')).render(App);
+    createRoot(frame.getElementById('MDXEditorWindow')).render(App);
 }
 function spawnEditor_plaintext(startingMd=""){
     let App =
@@ -49,7 +52,7 @@ function spawnEditor_plaintext(startingMd=""){
             <button onClick={() => savePage()}>Save!</button>
         </>;
     
-    createRoot(shadow.getElementById('MDXEditorWindow')).render(App);
+    createRoot(frame.getElementById('MDXEditorWindow')).render(App);
 
 }
 
@@ -66,7 +69,7 @@ function spawnEditor(content){
 // set the name for the site. This function allows 
 // you to swap between which site is selected. It does not rename your site.
 function setSite() {
-    site = shadow.getElementById("site").value;
+    site = document.getElementById("site").value;
     // get the current list of templates
     fetch("http://localhost:8000/meta/templates/"+site)
     .then(function(response){
@@ -104,7 +107,7 @@ function prefillTemplateSelector(templates, selectorID, excludeDefault=false) {
         opt.value = template;
         opt.innerHTML = template_stripped;
         // append this option to the list in the selector
-        shadow.getElementById(selectorID).appendChild(opt);
+        document.getElementById(selectorID).appendChild(opt);
     }
 }
 
@@ -146,7 +149,7 @@ function api_get_page(page){
     });
 }
 
-// loads the HTML of the template into the app
+// loads the HTML of the template into the iframe
 function loadTemplate(){
     // get the template name
     let template = startingVals["template"];
@@ -157,8 +160,34 @@ function loadTemplate(){
         let templateHTML = data["content"];
         // replace "{{content}}" with our paste-in code for the editor
         templateHTML = templateHTML.replace(/{{ *content *}}/, editor_paste_in);
-        // now shove that modified HTML into the app
-        document.getElementById("webpage").innerHTML = templateHTML;
+        // now shove that modified HTML into the iframe
+
+        let myFrame = document.createElement("iframe");
+        myFrame.srcdoc = templateHTML;
+        myFrame.id = "webpage_iframe";
+        document.getElementById("webpage").appendChild(myFrame);
+
+
+        // once the iframe is loaded, we can set the `frame` global var,
+        // and return our promise
+        return new Promise(function(resolve, reject){
+            // Wait for the iframe to load before resolving so its document is ready.
+            myFrame.addEventListener('load', function() {
+                frame = myFrame.contentDocument;
+                //append the stylesheet for the MDXEditor
+                const sheet = new myFrame.contentWindow.CSSStyleSheet();
+                sheet.replaceSync(MDX_stylesheet);
+                frame.adoptedStyleSheets = [...frame.adoptedStyleSheets, sheet];
+                resolve();
+            },
+            //only run the listener once
+            {once: true});
+
+            // Give up after some time if it doesn't load
+            setTimeout(() => reject(new Error('iframe load timeout')), 5000);
+        });
+
+
     });
 }
 
@@ -167,7 +196,7 @@ function loadPage(){
     // decide which page on the site to download
     // (need to make this dynamic later)
     //let page = "index.md";
-    shadow.getElementById("page_title").innerHTML = currentPage;
+    document.getElementById("page_title").innerHTML = currentPage;
 
 
     //fetch the page via the API
@@ -185,10 +214,10 @@ function loadPage(){
         startingVals["template"] = template;
 
         //get the template selector set up right
-        shadow.getElementById("template_selector").value = template;
+        document.getElementById("template_selector").value = template;
 
         // save the frontMatter for later when we upload
-        shadow.getElementById("frontMatter").value = frontMatter;
+        document.getElementById("frontMatter").value = frontMatter;
 
         // load the default template value in the input box
         loadDefaultTemplate();
@@ -196,10 +225,11 @@ function loadPage(){
         // set the title inside the little textbox
         loadTitle(getFrontMatterValue("title"));
 
+        // load the template html into the iframe
         loadTemplate()
-        .then(
-            () => spawnEditor(content)
-        );
+        .then(function(){
+            spawnEditor(content);
+        });
 
         //ref.current?.setMarkdown(content);
         //ref.current?.diffMarkdown(content);
@@ -209,21 +239,21 @@ function loadPage(){
 
 function setTemplate(){
     // get the input element in the html
-    let templateSelector = shadow.getElementById("template_selector");
+    let templateSelector = document.getElementById("template_selector");
     // get the filename for the selected template
     let template = templateSelector.options[templateSelector.selectedIndex].value;
     // get the old frontMatter
-    let frontMatter = shadow.getElementById("frontMatter").value;
+    let frontMatter = document.getElementById("frontMatter").value;
     // update the frontMatter to use the new template
     frontMatter = frontMatter.replace(/(?<=layout: ).*/, template);
     // overwrite our saved value (in the hidden input) for the frontMatter
-    shadow.getElementById("frontMatter").value = frontMatter;
+    document.getElementById("frontMatter").value = frontMatter;
 }
 window.setTemplate = setTemplate;
 
 function loadDefaultTemplate(){
     //get the template selection box
-    let defaultTemplate = shadow.getElementById("default_template");
+    let defaultTemplate = document.getElementById("default_template");
 
     fetch(apiStem+"/meta/default_template/"+site, {
         method : "GET",
@@ -236,7 +266,7 @@ function loadDefaultTemplate(){
 
 function setDefaultTemplate(){
     //get the template selection box
-    let defaultTemplate = shadow.getElementById("default_template").value;
+    let defaultTemplate = document.getElementById("default_template").value;
 
     fetch(apiStem+"/meta/default_template/"+site, {
         method : "PUT",
@@ -249,18 +279,18 @@ function setDefaultTemplate(){
 window.setDefaultTemplate = setDefaultTemplate;
 
 function setTitle(){
-    let title = shadow.getElementById("title").value;
+    let title = document.getElementById("title").value;
     editFrontMatter("title", title);
 }
 window.setTitle = setTitle;
 
 function loadTitle(title){
-    shadow.getElementById("title").value = title;
+    document.getElementById("title").value = title;
 }
 
 function editFrontMatter(key, value){
     // get the old frontMatter
-    let frontMatter = shadow.getElementById("frontMatter").value;
+    let frontMatter = document.getElementById("frontMatter").value;
     // create the dynamic regex to find and replace the value at the key
     var regex = new RegExp("(?<="+key+": ).*") // equiv to /(?<=key: ).*/
     // if the key doesn't exist, append it
@@ -273,12 +303,12 @@ function editFrontMatter(key, value){
         frontMatter = frontMatter.replace(regex, value);
     }
     // overwrite our saved value (in the hidden input) for the frontMatter
-    shadow.getElementById("frontMatter").value = frontMatter;
+    document.getElementById("frontMatter").value = frontMatter;
 }
 
 function getFrontMatterValue(key){
     // get the frontMatter
-    let frontMatter = shadow.getElementById("frontMatter").value;
+    let frontMatter = document.getElementById("frontMatter").value;
     // create the dynamic regex to find and replace the value at the key
     var regex = new RegExp("(?<="+key+": ).*") // equiv to /(?<=key: ).*/
     // if the key doesn't exist, return null
@@ -293,7 +323,7 @@ function getFrontMatterValue(key){
 //upload the page to the server
 function savePage(){
     // get the hidden frontMatter
-    let frontMatter = shadow.getElementById("frontMatter").value;
+    let frontMatter = document.getElementById("frontMatter").value;
     // get the content from the text editor
     let content = ref.current?.getMarkdown();
     let data = {"content": content, "frontMatter": frontMatter};
@@ -397,7 +427,7 @@ function getFileIndex_andApply(){
 }
 
 function applyFileIndex(index){
-    let fileExplorer = shadow.getElementById("file_explorer_list");
+    let fileExplorer = document.getElementById("file_explorer_list");
     // first clear out the existing index
     fileExplorer.innerHTML = "";
     applyFileIndex_recursive(index, fileExplorer);

@@ -1,0 +1,154 @@
+:root {
+    --selected-file-color: cornflowerBlue;
+    background-color: linen;
+
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    /*margin-bottom: 8px;*/
+}
+
+#box {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+#floating_editor {
+    flex: 0 1 auto;
+
+    border-color: bisque;
+    border: solid 2px;
+}
+
+#webpage {
+    flex: 1 1 auto;
+
+
+    /* real CSS */
+    margin-top: 8px;
+}
+
+#webpage iframe {
+    width: 100%;
+    height: 100%;
+}
+
+#row_1 {
+    display: flex;
+}
+
+#row_1_app_title {
+    margin: 0.5em;
+}
+
+#meta_form_right {
+    /*
+    margin-left: auto;
+    margin-right: 0;
+    width: fit-content;
+    float: right;
+    position: relative;
+    bottom: 2px;
+    */
+    margin: 1.2em;
+    margin-left: auto;
+}
+
+#row_2 {
+    display: flex;
+}
+
+#row_2_right_block {
+    margin: 0.5em;
+    margin-left: auto;
+    /*border: 2px solid chocolate;*/
+    display: flex;
+}
+
+#row_2_left_block {
+    /*border: 2px solid green;*/
+    width: auto;
+}
+
+
+
+#shadow_host {
+    border: 3px solid chocolate;
+}
+
+#page_form {
+    margin: 0.5em;
+}
+
+form {
+    margin: 0.5em;
+}
+
+#meta_form {
+    display: block;
+}
+
+#file_explorer {
+    /*float: right;*/
+    display: flexbox;
+    background-color: burlywood;
+    width: 20em;
+    max-width: 30vw;
+    border-radius: 8px;
+    border: 2px solid brown;
+    padding: 0.5em;
+    padding-left: 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+}
+
+#file_explorer li {
+    background-color: color-mix(in srgb, burlywood 50%, antiquewhite 40%);
+}
+
+#file_explorer li:hover {
+    background-color: color-mix(in srgb, burlywood 50%, antiquewhite 100%);
+}
+
+#file_explorer button {
+    margin-left: 0.5em;
+    margin-right: 0;
+}
+
+
+#publish_site_button {
+    font-size: 2em;
+}
+
+#page_text {
+    margin-bottom: 0.5em;
+}
+
+.site_editor {
+    margin-top: 2em;
+    margin-right: 5em;
+    width: 100%;
+    /*background-color: ghostwhite;*/
+}
+
+#page_title {
+    margin-left: 0.5em;
+}
+
+#editor_window {
+    margin: auto;
+    width: 70%;
+    margin-left: 1em;
+}
+
+#MDXEditorWindow {
+    background-color: white;
+}
+
+#output_field {
+    font-family: 'Courier New', Courier, monospace;
+}
