@@ -1,0 +1,10 @@
+/* let page styles apply to editable content */
+.mdxeditor .mdxeditor-editable,
+.mdxeditor .mdxeditor-preview {
+    all: unset;             /* remove editor's styling */
+    display: block;
+    box-sizing: border-box;
+    font: inherit;          /* inherit page font */
+    color: inherit;
+    line-height: inherit;
+}
