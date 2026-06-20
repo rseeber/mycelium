@@ -12,8 +12,8 @@ import floating_bar from "./resources/floating_bar.html?raw"
 // the original stylesheet for the MDXEditor
 //import MDX_stylesheet from '@mdxeditor/editor/style.css?raw'
 // unused
-import MDX_stylesheet from './resources/MDXEditor_custom.css?raw'
-import { call, editorSearchCursor$ } from '@mdxeditor/editor'
+//import MDX_stylesheet from './resources/MDXEditor_custom.css?raw'
+//import { call, editorSearchCursor$ } from '@mdxeditor/editor'
 // my fix that removes all styling from the editor area,
 // leaving only the toolbar styled
 //import MDX_stylesheet_fix from './resources/MDX_editor_fix.css?raw'
@@ -28,8 +28,8 @@ let editor;
 
 // this snippet injects the MDXEditor into the web app
 // unused
-const ref = createRef();
-let root;
+//const ref = createRef();
+//let root;
 
 let frame;
 let frameWindow;
@@ -51,7 +51,7 @@ let frameWindow;
 
 //this bit is just to initialize everything
 setSite();
-
+/*
 function spawnEditor_full(startingMd=""){
     let App =
         <>
@@ -70,6 +70,7 @@ function spawnEditor_plaintext(startingMd=""){
     createRoot(frame.getElementById('MDXEditorWindow')).render(App);
 
 }
+*/
 
 function setEditorValue(content, isInitial=false){
 
@@ -95,7 +96,7 @@ function setEditorValue(content, isInitial=false){
                 console.log("Updated content:", markdownContent);
             }
         });
-        //});
+        });
         */
 
     }
@@ -218,15 +219,15 @@ function loadTemplate(){
         markedScript.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
         // this is the editor itself
         let editorScript = myDoc.createElement("script");
-        editorScript.src = "/src/editor.js";
+        editorScript.src = "/src/markdown-wysiwyg/dist/editor.js";
         // this is the script that loads the editor in
         let callScript = myDoc.createElement("script");
-        callScript.src = "/src/spawn_editor.jsx";
+        callScript.src = "/src/markdown-wysiwyg/dist/loader.js";
         
         //we also need to import the stylesheet for the editor
         let sheet = myDoc.createElement("link");
         sheet.rel = "stylesheet";
-        sheet.href = "/src/editor.css";
+        sheet.href = "/src/markdown-wysiwyg/dist/editor.css";
 
         myDoc.head.appendChild(markedScript);
         myDoc.head.appendChild(editorScript);

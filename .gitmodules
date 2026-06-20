@@ -1,0 +1,3 @@
+[submodule "app/WebHost/src/markdown-wysiwyg"]
+	path = app/WebHost/src/markdown-wysiwyg
+	url = https://github.com/rseeber/markdown-wysiwyg

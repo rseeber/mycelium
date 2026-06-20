@@ -11,7 +11,3 @@ layout: mochalatte.html
 [sib](/sib)
 
 thing
-
-boom
-
-*hello*
