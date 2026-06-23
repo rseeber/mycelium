@@ -62,7 +62,7 @@ We don't track user data fields in the git repo (otherwise, any amount of experi
 
 ```
 # Copy the skeleton to the default user
-cp websites/src/demoSite websites/src/exampleSite
+cp websites/src/demoSite websites/src/exampleSite -r
 ```
 
 ## Run the program
@@ -77,6 +77,8 @@ Go into `websites/` and run the `api_handler.py` script:
 cd websites/
 fastapi dev api_handler.py
 ```
+
+If this section ever gives you a command not found error, be sure to check that you're still using the python virtual environment: `source ../venv/bin/activate`
 
 
 ### Web App
