@@ -12,8 +12,8 @@
     "vite": "^8.0.12"
   },
   "dependencies": {
-    "@celsowm/markdown-wysiwyg": "^1.0.6",
-    "@mdxeditor/editor": "^4.0.3",
+    "@11ty/eleventy": "^3.1.6",
+    "almostnode": "^0.2.14",
     "marked": "^18.0.5"
   }
 }
