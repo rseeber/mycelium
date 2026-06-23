@@ -1,5 +1,23 @@
 # Mycelium
 
+## Clone project and git submodules
+
+This project uses a submodule to handle the WYSIWYG markdown editor. As a result, you need to run 2 additional commands in order to be all set up and running:
+
+```
+# Clone the project
+git clone https://github.com/rseeber/linkBin.git
+
+# Initialize the submodules
+git submodule init
+
+# Fetch code from the submodules
+git submodule update
+```
+
+Changes made to a submodule are tracked by the repo the submodule points to. The editor submodule is an in-house fork, so feel free to make PRs to it if the need arises.
+
+
 ## Prerequisites
 
 This project has 3 moving parts: 
@@ -36,6 +54,15 @@ source venv/bin/activate
 # Required: install the pip dependencies
 pip install fastapi
 
+```
+
+## Clone the demo folder
+
+We don't track user data fields in the git repo (otherwise, any amount of experimentation on the app would make changes to the git log). Thus, you will need to copy the skeleton folder over to our default (currently hard-coded) user, by calling the following from the root of the repo:
+
+```
+# Copy the skeleton to the default user
+cp websites/src/demoSite websites/src/exampleSite
 ```
 
 ## Run the program
