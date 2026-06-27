@@ -28,6 +28,7 @@ function getEditorValue(){
 // you to swap between which site is selected. It does not rename your site.
 function setSite() {
     site = document.getElementById("site").value;
+    document.getElementById("site_title").textContent = site;
     // get the current list of templates
     fetch("http://localhost:8000/meta/templates/"+site)
     .then(function(response){
@@ -161,8 +162,12 @@ Press cancel to just delete '"+currentPage+"'.")){
 }
 window.deletePage = deletePage;
 
-function removeLinkRow(i){
+function removeLinkRow(i, refresh=true){
     startingVals.data.links.splice(i, 1);
+    if(refresh){
+        fillTemplateData(startingVals.data);
+        saveTemplateData();
+    }
 }
 window.removeLinkRow = removeLinkRow;
 
@@ -206,6 +211,7 @@ function addLinkRow(i=null, url=null, text=null){
 }
 window.addLinkRow = addLinkRow;
 
+// save user input in the link form to our working cache
 function cacheLinks() {
     let myList = document.getElementById("navbar_settings_links");
     // collect all the input in a 1-D list
@@ -236,6 +242,20 @@ function saveTemplateData(){
 }
 window.saveTemplateData = saveTemplateData;
 
+function fillTemplateData(data){
+    startingVals.data = data;
+    console.log(startingVals.data.links);
+    let myList = document.getElementById("navbar_settings_links");
+    myList.innerHTML = "";
+    //console.log(data.links);
+    let links = data.links;
+    // iterate through each link
+    for(let i = 0; i < links.length; ++i){
+        let link = links[i];
+        addLinkRow(i, link.url, link.text);
+    }
+}
+
 // loads the HTML of the template into the iframe
 function loadTemplate(){
     // get the data file, and load up any metadata fields
@@ -243,50 +263,7 @@ function loadTemplate(){
         let output = data.md;
         return JSON.parse(output);
     }).then((data) => {
-        startingVals.data = data;
-        console.log(startingVals.data.links);
-        let myList = document.getElementById("navbar_settings_links");
-        //console.log(data.links);
-        let links = data.links;
-        // iterate through each link
-        for(let i = 0; i < links.length; ++i){
-            let link = links[i];
-            addLinkRow(i, link.url, link.text);
-
-            /*
-
-            // label for the url
-            let urlLabel = document.createElement("label");
-            urlLabel.textContent = "Link: ";
-            // TODO: add `for` and other metadata for accessibility
-            // input box for the url
-            let urlInput = document.createElement("input");
-            urlInput.value = link.url;
-
-            // label for the text
-            let textLabel = document.createElement("label");
-            textLabel.textContent = "Text: ";
-            // TODO: add `for` and other metadata for accessibility
-            // input box for the text
-            let textInput = document.createElement("input");
-            textInput.value = link.text;
-
-            // trash button
-            let trashButton = document.createElement("button");
-            trashButton.textContent = "-";
-            trashButton.setAttribute("onclick", "removeLinkRow("+i+")");
-
-            // br element
-            let br = document.createElement("br");
-
-            myList.appendChild(urlLabel);
-            myList.appendChild(urlInput);
-            myList.appendChild(textLabel);
-            myList.appendChild(textInput);
-            myList.appendChild(trashButton);
-            myList.appendChild(br);
-            */
-        }
+        fillTemplateData(data);
     });
 
     // get the skeleton layout for this page
@@ -318,10 +295,6 @@ function loadTemplate(){
         // replace all the keyable sections
         // content
         myDoc.getElementById("_content").innerHTML = editor_paste_in;
-        // navbar
-        let button = myDoc.getElementById("_endlinks");
-        button.textContent = "+ Add";
-
 
         // Source - https://stackoverflow.com/a/35917295
         html = new XMLSerializer().serializeToString(myDoc);
