@@ -1,0 +1,10 @@
+{
+    "_schema": {
+        "links": {"url": null, "text": null}
+    },
+    "links" : [
+        { "url": "/", "text": "Home" },
+        { "url": "/blog/", "text": "Blog" },
+        { "url": "/about/", "text": "About" }
+    ]
+}

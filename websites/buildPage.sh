@@ -15,4 +15,5 @@ page=$2;
 input="src/$site/$page";
 
 # next, run 11ty
-npx @11ty/eleventy --config=./eleventy.config.js --input=$input --to=json;
+export DEMO=1;
+npx @11ty/eleventy --config=./prebuild.config.js --input=$input --to=json;

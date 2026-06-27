@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-import os, subprocess, shutil, time
+import os, subprocess, shutil, time, json
 from pathlib import Path
 import re
 
@@ -228,3 +228,28 @@ def get_index_recursive(site, subPath):
         else:
             index.update({f"{subPath}/{item}": None})
     return index
+
+# Build the given page with its front matter, replacing content with a keyable
+# value -- a div with id="_content". Returns as a string.
+@app.get("/meta/skeleton/{site}/{page:path}")
+def get_skeleton(site: str, page: str):
+    # First, we take in the frontmatter for the page they want
+    frontMatter = get_page(site, page)["frontMatter"]
+    # then, we fill the content with a keyable string
+    content = '<div id="_content"></div>'
+
+    # write the markdown to _demo.md
+    # TODO: perform this step without a disk operation
+    update_page(site, "_demo.md", {"frontMatter": frontMatter, "content": content})
+
+    # now use that _demo.md to build the skeleton
+    output = subprocess.run(["./buildPage.sh", site, "_demo.md"], stdout=subprocess.PIPE).stdout
+
+    # get the content (html output) of the site being built
+    print(output)
+    myJson = json.loads(output)[0]
+    #print(json.dumps(myJson, indent=4))
+    html = myJson["content"]
+
+    # return the html
+    return {"html": html}

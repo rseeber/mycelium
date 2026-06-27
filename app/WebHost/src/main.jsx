@@ -1,6 +1,3 @@
-import React, { createRef } from 'react'
-import { createRoot } from 'react-dom/client'
-
 import editor_paste_in from "./resources/editor_paste_in.html?raw"
 
 
@@ -118,6 +115,16 @@ function api_delete_resource(page){
     });
 }
 
+function api_get_skeleton(page){
+    return fetch(apiStem+"/meta/skeleton/"+site+"/"+page)
+    .then((response) => {
+        return response.json();
+    })
+    .then((data) => {
+        return data["html"];
+    })
+}
+
 function deletePage(){
     // (control flow on this function is a little confusing perhaps)
     let myPage = currentPage;
@@ -150,13 +157,11 @@ function loadTemplate(){
     console.log("template: ", template);
 
     //now go fetch that template from the _includes folder
-    return api_get_page("_includes/"+template)
-    .then(function(data){
-        let templateHTML = data["content"];
-        // replace "{{content}}" with our paste-in code for the editor
-        templateHTML = templateHTML.replace(/{{ *content *}}/, editor_paste_in);
-
-        let myDoc = new DOMParser().parseFromString(templateHTML, "text/html");
+    //return api_get_page("_includes/"+template)
+    return api_get_skeleton(currentPage)
+    .then(function(html){
+        console.log(html);
+        let myDoc = new DOMParser().parseFromString(html, "text/html");
         // import the required scripts for the editor
         let markedScript = myDoc.createElement("script");
         // marked is a dependency of the editor
@@ -173,17 +178,26 @@ function loadTemplate(){
         sheet.rel = "stylesheet";
         sheet.href = "/src/markdown-wysiwyg/dist/editor.css";
 
+        // stick all those nodes into the actual document
         myDoc.head.appendChild(markedScript);
         myDoc.head.appendChild(editorScript);
         myDoc.head.appendChild(callScript);
         myDoc.head.appendChild(sheet);
         
+        // replace all the keyable sections
+        // content
+        myDoc.getElementById("_content").innerHTML = editor_paste_in;
+        // navbar
+        let button = myDoc.getElementById("_endlinks");
+        button.textContent = "+ Add";
+
+
         // Source - https://stackoverflow.com/a/35917295
-        templateHTML = new XMLSerializer().serializeToString(myDoc);
+        html = new XMLSerializer().serializeToString(myDoc);
 
         // now shove that modified HTML into the iframe
         let myFrame = document.createElement("iframe");
-        myFrame.srcdoc = templateHTML;
+        myFrame.srcdoc = html;
         myFrame.id = "webpage_iframe";
         let webpageDiv = document.getElementById("webpage");
         webpageDiv.innerHTML = "";
@@ -471,7 +485,7 @@ function applyFileIndex_recursive(index, ul){
     for (var file in index) {
         let cleanFile = file.substring(1);
         // if cleanFile is one of the hidden files/dirs, skip this file
-        if (["eleventy.config.js", "_data", "_includes", ".trash"].includes(cleanFile)){
+        if (["eleventy.config.js", "_data", "_includes", "_demo.md", ".trash"].includes(cleanFile)){
             continue;
         }
         let li = document.createElement("li");
