@@ -30,10 +30,8 @@ function setSite() {
     site = document.getElementById("site").value;
     document.getElementById("site_title").textContent = site;
     // get the current list of templates
-    fetch("http://localhost:8000/meta/templates/"+site)
-    .then(function(response){
-        return response.json()
-    }).then(function(data){
+    api_get_templates()
+    .then(function(data){
         let templates = data["templates"];
         prefillTemplateSelector(templates, "template_selector");
         prefillTemplateSelector(templates, "default_template", true);
@@ -95,13 +93,17 @@ function publishSite(){
     savePage();
 
     //okay now actually publish
-    fetch("http://localhost:8000/publish/"+site, {
+    return api_publish_site();
+}
+window.publishSite = publishSite;   //accessible via html
+
+function api_publish_site() {
+    return fetch(apiStem+"/publish/"+site, {
         method: "PUT"
     }).then(function(response) {
         return response.json();
-    })
+    });
 }
-window.publishSite = publishSite;   //accessible via html
 
 function api_get_page(page){
     return fetch(apiStem+"/site/"+site+"/"+page)
@@ -116,10 +118,31 @@ function api_delete_resource(page){
     });
 }
 
+function api_move_page(src, dest){
+    return fetch(apiStem+"/move/"+site+"/"+src, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({"destination": dest}),
+    });
+}
+
 function api_update_page(page, data){
     return fetch("http://localhost:8000/update/"+site+"/"+page, {
         method: "PUT",
         content: "application/text+json",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+}
+
+// file should begin with a slash (eg '/', '/blog', etc)
+function api_create_page(file){
+    return fetch(apiStem+"/create/"+site+file, {
+        method: "PUT",
         headers: {
             "Content-Type": "application/json",
         },
@@ -135,6 +158,43 @@ function api_get_skeleton(page){
     .then((data) => {
         return data["html"];
     })
+}
+
+// returns the json response
+function api_get_templates(){
+    return fetch(apiStem+"/meta/templates/"+site)
+    .then(function(response){
+        return response.json()
+    });
+}
+
+// get the default template, returning it as a string
+function api_get_default_template(){
+    return fetch(
+        apiStem+"/meta/default_template/"+site, 
+        {method : "GET"})
+    .then(response => response.text()
+    ).then(function(data){
+        data = data.replace(/"/g, "");
+        return data;
+    });
+}
+
+function api_set_default_template(defaultTemplate){
+    return fetch(apiStem+"/meta/default_template/"+site, {
+        method : "PUT",
+        body: JSON.stringify({"template": defaultTemplate}),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+}
+
+function api_get_index(){
+    return fetch(apiStem+"/meta/index/"+site)
+    .then(function(response){
+        return response.json();
+    });
 }
 
 function deletePage(){
@@ -387,11 +447,10 @@ function loadDefaultTemplate(){
     //get the template selection box
     let defaultTemplate = document.getElementById("default_template");
 
-    fetch(apiStem+"/meta/default_template/"+site, {
-        method : "GET",
-    }).then(response => response.text()
-    ).then(function(data){
-        data = data.replace(/"/g, "")
+    // get the default template
+    api_get_default_template()
+    //then, set the value in the DOM
+    .then((data) => {
         defaultTemplate.value = data;
     })
 }
@@ -400,13 +459,7 @@ function setDefaultTemplate(){
     //get the template selection box
     let defaultTemplate = document.getElementById("default_template").value;
 
-    fetch(apiStem+"/meta/default_template/"+site, {
-        method : "PUT",
-        body: JSON.stringify({"template": defaultTemplate}),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
+    return api_set_default_template(defaultTemplate);
 }
 window.setDefaultTemplate = setDefaultTemplate;
 
@@ -517,15 +570,10 @@ function createChildPage(myPage=null){
             let parentFile = myPage;
             let destination = parentFolder+"/index.md";
             //move 'parentFile' to be called 'destination'
-            fetch(apiStem+"/move/"+site+"/"+parentFile, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({"destination": destination}),
-            }).then(function(response){
-                handleFileIndex();
-            })
+            api_move_page()
+            .then(function(response){
+                handleFileIndex(parentFile, destination);
+            });
         }
     });
 }
@@ -551,14 +599,7 @@ function createPage(path, extension=null){
     console.log("site: ", site);
     console.log("path: ", path);
 
-    return fetch(apiStem+"/create/"+site+path+"/"+filename, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    }).then(function(response){
-    })
+    api_create_page(path+"/"+filename);
 }
 
 function handleFileIndex(){
@@ -566,10 +607,8 @@ function handleFileIndex(){
 }
 
 function getFileIndex_andApply(){
-    fetch(apiStem+"/meta/index/"+site)
-    .then(function(response){
-        return response.json();
-    }).then(function(data){
+    api_get_index()
+    .then(function(data){
         startingVals["fileIndex"] = data;
         return applyFileIndex(data);
     });
