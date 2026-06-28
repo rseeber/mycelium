@@ -140,7 +140,7 @@ function api_update_page(page, data){
 }
 
 // file should begin with a slash (eg '/', '/blog', etc)
-function api_create_page(file){
+function api_create_page(file, data){
     return fetch(apiStem+"/create/"+site+file, {
         method: "PUT",
         headers: {
@@ -525,7 +525,10 @@ function savePage(){
 }
 
 function createSiblingPage(){
+    // remove the file ending (/foo/bar -> /foo)
     let parentIndex = ("/"+currentPage).replace(/\/([^\/]*)$/, "");
+    // get the parent folder by appending index.md, then make a child of it
+    // (i.e., a sibling is just a child of the same parent)
     createChildPage(parentIndex+"/index.md");
 }
 window.createSiblingPage = createSiblingPage;
@@ -570,7 +573,7 @@ function createChildPage(myPage=null){
             let parentFile = myPage;
             let destination = parentFolder+"/index.md";
             //move 'parentFile' to be called 'destination'
-            api_move_page()
+            api_move_page(parentFile, destination)
             .then(function(response){
                 handleFileIndex(parentFile, destination);
             });
@@ -599,7 +602,7 @@ function createPage(path, extension=null){
     console.log("site: ", site);
     console.log("path: ", path);
 
-    api_create_page(path+"/"+filename);
+    return api_create_page(path+"/"+filename, data);
 }
 
 function handleFileIndex(){

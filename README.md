@@ -70,38 +70,10 @@ cp websites/src/demoSite websites/src/exampleSite -r
 
 ## Run the program
 
-You will need to have 3 terminals open in order to do this, running each application at the same time. For now, they need to all be on the same device so they can access each other via `localhost`.
-
-### API Handler
-
-Go into `websites/` and run the `api_handler.py` script:
+To easily start all 3 programs, simply call from the root of the project:
 
 ```
-cd websites/
-fastapi dev api_handler.py
-```
-
-If this section ever gives you a command not found error, be sure to check that you're still using the python virtual environment: `source ../venv/bin/activate`
-
-
-### Web App
-
-You'll use `npm` to run the web app, as it is built with `vite`:
-
-```
-cd app/WebHost
-npm run dev
-```
-
-### Deploy prod sites
-
-This one is a little bit open ended. A proper solution is eventually going to be created, but for now we're using existing tools to bridge the gap.
-
-We're going to serve the `exampleSite` folder over HTTP. From the root of the project, cd into it, then run the python http server:
-
-```
-cd websites/dist/exampleSite
-python -m http.server 8080 # Serve over port 8080
+./run.sh
 ```
 
 ### Now test it
