@@ -1,6 +1,3 @@
-import React, { createRef } from 'react'
-import { createRoot } from 'react-dom/client'
-
 import editor_paste_in from "./resources/editor_paste_in.html?raw"
 
 
@@ -31,11 +28,10 @@ function getEditorValue(){
 // you to swap between which site is selected. It does not rename your site.
 function setSite() {
     site = document.getElementById("site").value;
+    document.getElementById("site_title").textContent = site;
     // get the current list of templates
-    fetch("http://localhost:8000/meta/templates/"+site)
-    .then(function(response){
-        return response.json()
-    }).then(function(data){
+    api_get_templates()
+    .then(function(data){
         let templates = data["templates"];
         prefillTemplateSelector(templates, "template_selector");
         prefillTemplateSelector(templates, "default_template", true);
@@ -97,13 +93,17 @@ function publishSite(){
     savePage();
 
     //okay now actually publish
-    fetch("http://localhost:8000/publish/"+site, {
+    return api_publish_site();
+}
+window.publishSite = publishSite;   //accessible via html
+
+function api_publish_site() {
+    return fetch(apiStem+"/publish/"+site, {
         method: "PUT"
     }).then(function(response) {
         return response.json();
-    })
+    });
 }
-window.publishSite = publishSite;   //accessible via html
 
 function api_get_page(page){
     return fetch(apiStem+"/site/"+site+"/"+page)
@@ -115,6 +115,85 @@ function api_get_page(page){
 function api_delete_resource(page){
     return fetch(apiStem+"/delete/"+site+"/"+page, {
         method: "PUT"
+    });
+}
+
+function api_move_page(src, dest){
+    return fetch(apiStem+"/move/"+site+"/"+src, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({"destination": dest}),
+    });
+}
+
+function api_update_page(page, data){
+    return fetch("http://localhost:8000/update/"+site+"/"+page, {
+        method: "PUT",
+        content: "application/text+json",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+}
+
+// file should begin with a slash (eg '/', '/blog', etc)
+function api_create_page(file, data){
+    return fetch(apiStem+"/create/"+site+file, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+}
+
+function api_get_skeleton(page){
+    return fetch(apiStem+"/meta/skeleton/"+site+"/"+page)
+    .then((response) => {
+        return response.json();
+    })
+    .then((data) => {
+        return data["html"];
+    })
+}
+
+// returns the json response
+function api_get_templates(){
+    return fetch(apiStem+"/meta/templates/"+site)
+    .then(function(response){
+        return response.json()
+    });
+}
+
+// get the default template, returning it as a string
+function api_get_default_template(){
+    return fetch(
+        apiStem+"/meta/default_template/"+site, 
+        {method : "GET"})
+    .then(response => response.text()
+    ).then(function(data){
+        data = data.replace(/"/g, "");
+        return data;
+    });
+}
+
+function api_set_default_template(defaultTemplate){
+    return fetch(apiStem+"/meta/default_template/"+site, {
+        method : "PUT",
+        body: JSON.stringify({"template": defaultTemplate}),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+}
+
+function api_get_index(){
+    return fetch(apiStem+"/meta/index/"+site)
+    .then(function(response){
+        return response.json();
     });
 }
 
@@ -143,20 +222,114 @@ Press cancel to just delete '"+currentPage+"'.")){
 }
 window.deletePage = deletePage;
 
+function removeLinkRow(i, refresh=true){
+    startingVals.data.links.splice(i, 1);
+    if(refresh){
+        fillTemplateData(startingVals.data);
+        saveTemplateData();
+    }
+}
+window.removeLinkRow = removeLinkRow;
+
+function addLinkRow(i=null, url=null, text=null){
+    let myList = document.getElementById("navbar_settings_links");
+    if(!i){
+        i = myList.childElementCount;
+    }
+
+
+    // label for the url
+    let urlLabel = document.createElement("label");
+    urlLabel.textContent = "Link: ";
+    // TODO: add `for` and other metadata for accessibility
+    // input box for the url
+    let urlInput = document.createElement("input");
+    urlInput.value = url;
+
+    // label for the text
+    let textLabel = document.createElement("label");
+    textLabel.textContent = "Text: ";
+    // TODO: add `for` and other metadata for accessibility
+    // input box for the text
+    let textInput = document.createElement("input");
+    textInput.value = text;
+
+    // trash button
+    let trashButton = document.createElement("button");
+    trashButton.textContent = "-";
+    trashButton.setAttribute("onclick", "removeLinkRow("+i+")");
+
+    // br element
+    let br = document.createElement("br");
+
+    myList.appendChild(urlLabel);
+    myList.appendChild(urlInput);
+    myList.appendChild(textLabel);
+    myList.appendChild(textInput);
+    myList.appendChild(trashButton);
+    myList.appendChild(br);
+}
+window.addLinkRow = addLinkRow;
+
+// save user input in the link form to our working cache
+function cacheLinks() {
+    let myList = document.getElementById("navbar_settings_links");
+    // collect all the input in a 1-D list
+    let messyList = [];
+    for(const elem of myList.children){
+        // only read the text input values
+        if (["LABEL", "BR", "BUTTON"].includes(elem.nodeName)){
+            continue;
+        }
+        messyList.push(elem.value);
+    }
+    let links = [];
+    // seperate the list into our data pairs of 'url' and 'text'
+    for(let i = 0; i < messyList.length; i+=2){
+        let item = {"url": messyList[i], "text": messyList[i+1]};
+        links.push(item);
+    }
+    // now save it
+    startingVals.data.links = links;
+}
+
+function saveTemplateData(){
+    // first, save everything already in our link form
+    cacheLinks();
+    // then, send the data back to the server
+    let data = {"frontMatter": null, "content": startingVals.data};
+    return api_update_page("_data/data.json", data);
+}
+window.saveTemplateData = saveTemplateData;
+
+function fillTemplateData(data){
+    startingVals.data = data;
+    console.log(startingVals.data.links);
+    let myList = document.getElementById("navbar_settings_links");
+    myList.innerHTML = "";
+    //console.log(data.links);
+    let links = data.links;
+    // iterate through each link
+    for(let i = 0; i < links.length; ++i){
+        let link = links[i];
+        addLinkRow(i, link.url, link.text);
+    }
+}
+
 // loads the HTML of the template into the iframe
 function loadTemplate(){
-    // get the template name
-    let template = startingVals["template"];
-    console.log("template: ", template);
+    // get the data file, and load up any metadata fields
+    api_get_page("_data/data.json").then((data) => {
+        let output = data.md;
+        return JSON.parse(output);
+    }).then((data) => {
+        fillTemplateData(data);
+    });
 
-    //now go fetch that template from the _includes folder
-    return api_get_page("_includes/"+template)
-    .then(function(data){
-        let templateHTML = data["content"];
-        // replace "{{content}}" with our paste-in code for the editor
-        templateHTML = templateHTML.replace(/{{ *content *}}/, editor_paste_in);
-
-        let myDoc = new DOMParser().parseFromString(templateHTML, "text/html");
+    // get the skeleton layout for this page
+    return api_get_skeleton(currentPage)
+    .then(function(html){
+        let myDoc = new DOMParser().parseFromString(html, "text/html");
         // import the required scripts for the editor
         let markedScript = myDoc.createElement("script");
         // marked is a dependency of the editor
@@ -173,17 +346,22 @@ function loadTemplate(){
         sheet.rel = "stylesheet";
         sheet.href = "/src/markdown-wysiwyg/dist/editor.css";
 
+        // stick all those nodes into the actual document
         myDoc.head.appendChild(markedScript);
         myDoc.head.appendChild(editorScript);
         myDoc.head.appendChild(callScript);
         myDoc.head.appendChild(sheet);
         
+        // replace all the keyable sections
+        // content
+        myDoc.getElementById("_content").innerHTML = editor_paste_in;
+
         // Source - https://stackoverflow.com/a/35917295
-        templateHTML = new XMLSerializer().serializeToString(myDoc);
+        html = new XMLSerializer().serializeToString(myDoc);
 
         // now shove that modified HTML into the iframe
         let myFrame = document.createElement("iframe");
-        myFrame.srcdoc = templateHTML;
+        myFrame.srcdoc = html;
         myFrame.id = "webpage_iframe";
         let webpageDiv = document.getElementById("webpage");
         webpageDiv.innerHTML = "";
@@ -269,11 +447,10 @@ function loadDefaultTemplate(){
     //get the template selection box
     let defaultTemplate = document.getElementById("default_template");
 
-    fetch(apiStem+"/meta/default_template/"+site, {
-        method : "GET",
-    }).then(response => response.text()
-    ).then(function(data){
-        data = data.replace(/"/g, "")
+    // get the default template
+    api_get_default_template()
+    //then, set the value in the DOM
+    .then((data) => {
         defaultTemplate.value = data;
     })
 }
@@ -282,19 +459,19 @@ function setDefaultTemplate(){
     //get the template selection box
     let defaultTemplate = document.getElementById("default_template").value;
 
-    fetch(apiStem+"/meta/default_template/"+site, {
-        method : "PUT",
-        body: JSON.stringify({"template": defaultTemplate}),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
+    return api_set_default_template(defaultTemplate);
 }
 window.setDefaultTemplate = setDefaultTemplate;
 
 function setTitle(){
     let title = document.getElementById("title").value;
     editFrontMatter("title", title);
+    // save the new title
+    savePage()
+    // load the page so the title is reflected
+    .then(() => {
+        setTimeout(loadPage(), 500);
+    });
 }
 window.setTitle = setTitle;
 
@@ -344,20 +521,14 @@ function savePage(){
 
     // get the specific page we're editing
     //send an `update_page` API to the server
-    fetch("http://localhost:8000/update/"+site+"/"+currentPage, {
-        method: "PUT",
-        content: "application/text+json",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    }).then(function(response){
-        //fillEditor(content);
-    });
+    return api_update_page(currentPage, data);
 }
 
 function createSiblingPage(){
+    // remove the file ending (/foo/bar -> /foo)
     let parentIndex = ("/"+currentPage).replace(/\/([^\/]*)$/, "");
+    // get the parent folder by appending index.md, then make a child of it
+    // (i.e., a sibling is just a child of the same parent)
     createChildPage(parentIndex+"/index.md");
 }
 window.createSiblingPage = createSiblingPage;
@@ -402,15 +573,10 @@ function createChildPage(myPage=null){
             let parentFile = myPage;
             let destination = parentFolder+"/index.md";
             //move 'parentFile' to be called 'destination'
-            fetch(apiStem+"/move/"+site+"/"+parentFile, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({"destination": destination}),
-            }).then(function(response){
-                handleFileIndex();
-            })
+            api_move_page(parentFile, destination)
+            .then(function(response){
+                handleFileIndex(parentFile, destination);
+            });
         }
     });
 }
@@ -436,14 +602,7 @@ function createPage(path, extension=null){
     console.log("site: ", site);
     console.log("path: ", path);
 
-    return fetch(apiStem+"/create/"+site+path+"/"+filename, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    }).then(function(response){
-    })
+    return api_create_page(path+"/"+filename, data);
 }
 
 function handleFileIndex(){
@@ -451,10 +610,8 @@ function handleFileIndex(){
 }
 
 function getFileIndex_andApply(){
-    fetch(apiStem+"/meta/index/"+site)
-    .then(function(response){
-        return response.json();
-    }).then(function(data){
+    api_get_index()
+    .then(function(data){
         startingVals["fileIndex"] = data;
         return applyFileIndex(data);
     });
@@ -471,7 +628,7 @@ function applyFileIndex_recursive(index, ul){
     for (var file in index) {
         let cleanFile = file.substring(1);
         // if cleanFile is one of the hidden files/dirs, skip this file
-        if (["eleventy.config.js", "_data", "_includes", ".trash"].includes(cleanFile)){
+        if (["eleventy.config.js", "_data", "_includes", "_demo.md", ".trash"].includes(cleanFile)){
             continue;
         }
         let li = document.createElement("li");
