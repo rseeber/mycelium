@@ -298,7 +298,9 @@ function saveTemplateData(){
     cacheLinks();
     // then, send the data back to the server
     let data = {"frontMatter": null, "content": startingVals.data};
-    return api_update_page("_data/data.json", data);
+    return api_update_page("_data/data.json", data)
+    .then(savePage())
+    .then(loadPage());
 }
 window.saveTemplateData = saveTemplateData;
 
@@ -440,6 +442,8 @@ function setTemplate(){
     frontMatter = frontMatter.replace(/(?<=layout: ).*/, template);
     // overwrite our saved value (in the hidden input) for the frontMatter
     document.getElementById("frontMatter").value = frontMatter;
+
+    return savePage().then(loadPage());
 }
 window.setTemplate = setTemplate;
 
@@ -459,7 +463,10 @@ function setDefaultTemplate(){
     //get the template selection box
     let defaultTemplate = document.getElementById("default_template").value;
 
-    return api_set_default_template(defaultTemplate);
+    return api_set_default_template(defaultTemplate)
+    // TODO: only do this if the current page uses 'default' as their template
+    .then(savePage())
+    .then(loadPage());
 }
 window.setDefaultTemplate = setDefaultTemplate;
 
