@@ -12,3 +12,5 @@ websites/dist/*
 !websites/src/demoSite/
 
 websites/package-lock.json
+
+websites/data
