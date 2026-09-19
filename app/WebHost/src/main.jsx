@@ -27,7 +27,10 @@ function getEditorValue(){
 // set the name for the site. This function allows 
 // you to swap between which site is selected. It does not rename your site.
 function setSite() {
-    site = document.getElementById("site").value;
+    //site = document.getElementById("site").value;
+    //get site from the username cookie
+    site = _getCookie("username")
+
     document.getElementById("site_title").textContent = site;
     // get the current list of templates
     api_get_templates()
@@ -46,6 +49,23 @@ function setSite() {
 }
 window.setSite = setSite;   //accessible via html
 
+//return the value of a cookie, given its key
+// copied from https://www.w3schools.com/js/js_cookies.asp
+function _getCookie(key) {
+  let name = key + "=";
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for(let i = 0; i <ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
 
 function prefillTemplateSelector(templates, selectorID, excludeDefault=false) {
     for (let i = 0; i < templates.length; i++) {

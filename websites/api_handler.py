@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Cookie
+from fastapi import FastAPI, HTTPException, Cookie, Response, Request, Depends
+from fastapi.responses import JSONResponse
 import os, subprocess, shutil, time, json
 from pathlib import Path
 import re
@@ -14,7 +15,7 @@ def create_account(username, email, password):
     output = subprocess.run(["SLIM-cli/slim", "addUser", username, password])
 
     # Error checking
-    if output.returncode < 0:
+    if output.returncode != 0:
         raise HTTPException(status_code=400, detail="Username alrady taken (passwd db)")
 
     # Add the username and email to a database
@@ -53,11 +54,59 @@ def isValidUsername(username: str):
         return False
     return True
 
+@app.put("/meta/login/")
+def login(username, password, response: Response):
+    if "@" in username:
+        email = username
+        username = get_username_from_email(email)
+        if username == -1:
+            #error
+            raise HTTPException(status_code=400)
+    # loginAsUser 
+    output = subprocess.run(["SLIM-cli/slim", "loginAsUser", username, password], stdout=subprocess.PIPE)
+    if output.returncode != 0:
+        # error
+        raise HTTPException(status_code=400, detail="invalid username or password")
+    myJson = json.loads(output.stdout)
+    token = myJson["token"]
+    # TODO: implement expiry
+    expiry = myJson["expiry"]
+    response = JSONResponse(content=None)
+    max_age = 30 * 24 * 60 * 60     # 30 days
+    response.set_cookie("auth", token, max_age=max_age)
+    return response
+    
+
+def get_username_from_email(email):
+    if email == "bob":
+        return -1
+    return ""
+
+# returns the username associated with the token, or raises a 401 error if not found
+def validate_token(token):
+    output = subprocess.run(["SLIM-cli/slim", "validateToken", str(token)], stdout=subprocess.PIPE)
+    if output.returncode != 0:
+        # error
+        raise HTTPException(status_code=401, detail="Invalid login token")
+    print(output.stdout)
+    print(output.returncode)
+    myJson = json.loads(output.stdout)
+    user = myJson["user"]
+    return user
+
+def check_auth(site: str, request: Request):
+    token = request.cookies.get("auth")
+    if token == None:
+        raise HTTPException(status_code=401, detail="Unauthenticated user")
+    username = validate_token(token)
+    if username != site:
+        raise HTTPException(status_code=403, detail=f"User {username} not authorized to access {site}")
+    return
 
 
 
 @app.get("/site/{site}/{page:path}")
-def get_page(site: str, page: str):
+def get_page(site: str, page: str, _: None = Depends(check_auth)):
     # read the file
     try:
         with open(f"src/{site}/{page}", "r") as f:
@@ -92,7 +141,7 @@ def getTemplateIndices(frontMatter: str):
     return start, end
 
 @app.put("/move/{site}/{page:path}")
-def move_page(site: str, page: str, opt: dict, mkdir=False):
+def move_page(site: str, page: str, opt: dict, mkdir=False, _: None = Depends(check_auth)):
     destination = opt["destination"]
     print(f"(move page):\n\tsite: {site}\n\tpage: {page}\n\tdestination: {destination}")
     # make parent directories first
@@ -112,7 +161,7 @@ def move_page(site: str, page: str, opt: dict, mkdir=False):
     shutil.move(f"src/{site}/{page}", f"src/{site}/{opt["destination"]}")
 
 @app.put("/create/{site}/{page:path}")
-def create_page(site: str, page: str, fileContents: dict):
+def create_page(site: str, page: str, fileContents: dict, _: None = Depends(check_auth)):
     path = f"src/{site}/{page}"
 
     # if we're creating [file].[exten], but [file]/ exists,
@@ -142,7 +191,7 @@ def create_page(site: str, page: str, fileContents: dict):
 # "frontMatter" and "content". All other fields are unused.
 # this API will concatenate them in order to save back to the md file
 @app.put("/update/{site}/{page:path}")
-def update_page(site: str, page: str, update: dict):
+def update_page(site: str, page: str, update: dict, _: None = Depends(check_auth)):
     if site not in os.listdir("src"):
         raise HTTPException(status_code=404, detail="Site not found")
 
@@ -175,7 +224,7 @@ def update_page(site: str, page: str, update: dict):
 
 
 @app.put("/publish/{site}")
-def publish_site(site: str):
+def publish_site(site: str, _: None = Depends(check_auth)):
     # go into path, run `npx @11ty/eleventy` in order to
     # generate the new site with the updated source files
     # (before this, we were _only_ updating source files,
@@ -189,14 +238,14 @@ def publish_site(site: str):
 
 # return a list of templates currently "installed" on the site
 @app.get("/meta/templates/{site}")
-def get_templates(site: str):
+def get_templates(site: str, _: None = Depends(check_auth)):
     ls = os.listdir(f"src/{site}/_includes/")
     # get a list of all files that end with .html or .md
     templates = [t for t in ls if (t.endswith(".html") or t.endswith(".md"))]
     return {"templates": templates}
 
 @app.put("/meta/templates/{site}/{page:path}")
-def set_template(site: str, page: str, newTemplate: str):
+def set_template(site: str, page: str, newTemplate: str, _: None = Depends(check_auth)):
     myPage = get_page(site, page)
     # if it's already done, do nothing
     if newTemplate == myPage["templateName"]:
@@ -212,7 +261,7 @@ def set_template(site: str, page: str, newTemplate: str):
     update_page(site, page, {"content": content, "frontMatter": frontMatter})
 
 @app.put("/meta/default_template/{site}")
-def set_default_template(site: str, opt: dict):
+def set_default_template(site: str, opt: dict, _: None = Depends(check_auth)):
     template = opt["template"]
     """
     # this assumes the file already exists, and it fully overwrites it
@@ -224,7 +273,7 @@ def set_default_template(site: str, opt: dict):
     
 
 @app.get("/meta/default_template/{site}")
-def get_default_template(site: str):
+def get_default_template(site: str, _: None = Depends(check_auth)):
     # get the frontMatter for our default.html template
     default = get_page(site, "_includes/default.html")["frontMatter"]
 
@@ -240,7 +289,7 @@ def get_default_template(site: str):
     
 
 @app.put("/delete/{site}/{page:path}")
-def delete_resource(site: str, page: str):
+def delete_resource(site: str, page: str, _: None = Depends(check_auth)):
     resource = f"src/{site}/{page}"
     timestamp = int(time.time())
     if os.path.isdir(resource):
@@ -262,7 +311,7 @@ def delete_resource(site: str, page: str):
     move_page(site, page, {"destination":trashDestination}, True)
 
 @app.get("/meta/index/{site}")
-def get_index(site: str):
+def get_index(site: str, _: None = Depends(check_auth)):
     # recursively go through the subdirs of the site folder, listing everything
     return get_index_recursive(site, "")
 
@@ -280,7 +329,7 @@ def get_index_recursive(site, subPath):
 # Build the given page with its front matter, replacing content with a keyable
 # value -- a div with id="_content". Returns as a string.
 @app.get("/meta/skeleton/{site}/{page:path}")
-def get_skeleton(site: str, page: str):
+def get_skeleton(site: str, page: str, _: None = Depends(check_auth)):
     # First, we take in the frontmatter for the page they want
     frontMatter = get_page(site, page)["frontMatter"]
     # then, we fill the content with a keyable string
