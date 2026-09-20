@@ -12,6 +12,18 @@ npm install
 # Go back to the root of the project
 cd ../..
 
+# Create the `websites/data/` folder and it's `emails.json` file
+cd websites
+mkdir data
+if test -f data/emails.json; then
+    echo "emails.json exists"
+else
+    echo "{}" > data/emails.json
+fi
+
+# Go back to the root of the project
+cd ..
+
 # Install npm dependencies into the source folder for the deployed websites
 echo "Installing static site generator (11ty) and its dependencies"
 cd websites/src
