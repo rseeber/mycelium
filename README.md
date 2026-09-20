@@ -1,21 +1,16 @@
 # Mycelium 🍄
 
-Mycelium is an 11ty-powered project that allows users to create, edit, and publish a website all within their browser, without ever (needing) to see a single line of markdown or html code. Future plans exist to extend beyond just the webHost program, and also make a module titled LinkBin, which will be a social, link-sharing service on the Social Web (aka "[fediverse](https://en.wikipedia.org/wiki/Fediverse)") via [ActivityPub](https://en.wikipedia.org/wiki/ActivityPub). You can read more about these plans in the [ROADMAP.md](/ROADMAP.md).
+Mycelium is an 11ty-powered project that allows users to create, edit, and publish a website all within their browser, without ever (needing) to see a single line of markdown or html code. The idea is to make a simple interface for making basic sites on the smallweb.
+
+Future plans exist to extend beyond just the webHost program, and also make a module titled LinkBin, which will be a social, link-sharing service on the Social Web (aka "[fediverse](https://en.wikipedia.org/wiki/Fediverse)") via [ActivityPub](https://en.wikipedia.org/wiki/ActivityPub). You can read more about these plans in the [ROADMAP.md](/ROADMAP.md).
 
 
 ## Clone project and git submodules
 
-This project uses a submodule to handle the WYSIWYG markdown editor. As a result, you need to run 2 additional commands in order to be all set up and running:
+This project uses several submodules for various components. After calling git clone and entering into the project, you will need to call the following command in order to clone or update each of the submodules:
 
 ```
-# Clone the project
-git clone https://github.com/rseeber/linkBin.git
-
-# Initialize the submodules
-git submodule init
-
-# Fetch code from the submodules
-git submodule update
+git submodule update --init --recursive
 ```
 
 Changes made to a submodule are tracked by the repo the submodule points to. The editor submodule is an in-house fork, so feel free to make PRs to it if the need arises.
@@ -23,26 +18,15 @@ Changes made to a submodule are tracked by the repo the submodule points to. The
 
 ## Install the prerequisites
 
-This project requires both [Python]() and [NPM]() to be installed.
+This project requires both [Python](), [npm](), and [GNU Screen]() to be installed.
 
-Additionally, you will need to call the `setup.sh` script, which installs the various libraries to their respective subdirectories, as well as creating a Python virtual environment. 
-
-## Clone the demo folder
-
-We don't track user data fields in the git repo (otherwise, any amount of experimentation on the app would make changes to the git log). Thus, you will need to copy the skeleton folder over to our default (currently hard-coded) user, by calling the following from the root of the repo:
-
-```
-# Copy the skeleton to the default user
-cp websites/src/demoSite websites/src/exampleSite -r
-```
+Additionally, you will need to call the `setup.sh` script, which installs various libraries and performs other setup tasks. The script might output errors if called multiple times.
 
 ## Run the program
 
-To easily start all 3 programs, simply call from the root of the project:
+In order to start the program, call `run.sh`. This script launches the web app and api that allows any user to login and edit their website. It also launches an HTTP server that hosts the website of just _one_ of the users. By default, that user is `testuser`, but you can specify any other user as an argument, instead: `run.sh [user]`.
 
-```
-./run.sh
-```
+If you'd like to login as the default user, their password is 'password' by default. You can find this information in the `setup.sh` script, where the user is initially created.
 
 ### Now test it
 
@@ -53,11 +37,3 @@ Also go ahead and check out your live site (after you hit "Publish") at http://1
 # Contributing
 
 You can check out our [CONTRIBUTORS.md](/CONTRIBUTORS.md) and [ROADMAP.md](/ROADMAP.md) files for more information on how to contribute to the project.
-
----
-
-This project has 3 moving parts: 
-
-1. the web app (the user dashboard where you can edit your webpage), 
-2. the API (which is how the web app can modify real data), 
-3. and the deployed site (which can be deployed using any HTTP mechanism of your choosing).
