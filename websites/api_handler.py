@@ -7,7 +7,7 @@ import re
 app = FastAPI()
 
 @app.post("/meta/create_account/")
-def create_account(opt: dict, response: Response):
+def create_account(opt: dict):
     try:
         username = opt["username"]
         email = opt["email"]
