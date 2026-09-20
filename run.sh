@@ -12,7 +12,7 @@ fi
 
 HTTP_DIR="websites/dist/$user";
 
-echo $HTTP_DIR;
+source venv/bin/activate
 
 # kill any existing sessions with the same name
 screen -S $session -X quit >> /dev/null;
