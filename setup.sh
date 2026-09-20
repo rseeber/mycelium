@@ -23,3 +23,7 @@ python3 -m venv venv
 source venv/bin/activate
 # Required: install the pip dependencies
 pip install fastapi fastapi[standard]
+
+# Now create the default user for testing purposes
+cd websites
+python3 -c "import api_handler as api; api.create_account({'username':'exampleSite', 'password':'password', 'email': 'example@email'})"
