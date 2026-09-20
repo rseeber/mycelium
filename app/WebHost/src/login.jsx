@@ -13,18 +13,21 @@ if (token != ""){
     window.location.href = "/";
 }
 
-function doLogin(){
-    const form = document.getElementById("login-form");
+function getFormData(formName){
+    const form = document.getElementById(formName);
     const formData = new FormData(form);
 
     let data = {
         username: formData.get("uname"),
         password: formData.get("psw"),
+        email: formData.get("email")    // undefined if formName is 'login-form'
     };
+    return data;
+}
 
-    console.log(data);
-    console.log(data.username);
-    console.log(data.password);
+function doLogin(){
+
+    let data = getFormData('login-form');
 
     api_login(data.username, data.password)
     .then(function(success){
@@ -37,3 +40,19 @@ function doLogin(){
     });
 }
 window.doLogin = doLogin;
+
+function doSignup(){
+    let data = getFormData('signup-form');
+
+    api_create_account(data.username, data.email, data.password)
+    .then(function(success){
+        if (success){
+            document.getElementById("signup-success-message").style.display = "initial";
+            //document.location = "/";
+        }
+        else {
+            console.log("Error, invalid login");
+        }
+    });
+}
+window.doSignup = doSignup;

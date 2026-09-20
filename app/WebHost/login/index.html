@@ -18,7 +18,8 @@
     <title>Login</title>
 </head>
 <body>
-	<form id="login-form" onSubmit="return doLogin()" method="post">
+	<h1>Log In</h1>
+	<form id="login-form" onSubmit="return doLogin()">
 		<div class="container">
 			<label for="uname"><b>Username</b></label>
 			<input type="text" placeholder="Enter Username" name="uname" required/><br/>
@@ -29,5 +30,21 @@
 			<button type="button" onClick="return doLogin()">Login</button>
 		</div>
 	</form>
+	<h1>Sign Up</h1>
+	<form id="signup-form" onSubmit="return doSignup()">
+		<div class="container">
+			<label for="uname"><b>Username</b></label>
+			<input type="text" placeholder="Enter Username" name="uname" required/><br/>
+
+			<label for="uname"><b>Email</b></label>
+			<input type="text" placeholder="Enter Username" name="uname" required/><br/>
+
+			<label for="psw"><b>Password</b></label>
+			<input type="password" placeholder="Enter Password" name="psw" required/><br/>
+			
+			<button type="button" onClick="return doSignup()">Login</button>
+		</div>
+	</form>
+	<div id="signup-success-message" style="display: none;"><p>Account created successfully! Please <a href="/login/">click here</a> to now login.</p></div>
 </body>
 </html>
