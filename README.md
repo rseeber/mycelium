@@ -21,43 +21,11 @@ git submodule update
 Changes made to a submodule are tracked by the repo the submodule points to. The editor submodule is an in-house fork, so feel free to make PRs to it if the need arises.
 
 
-## Prerequisites
+## Install the prerequisites
 
-This project has 3 moving parts: 
+This project requires both [Python]() and [NPM]() to be installed.
 
-1. the web app (the user dashboard where you can edit your webpage), 
-2. the API (which is how the web app can modify real data), 
-3. and the deployed site (which can be deployed using any HTTP mechanism of your choosing).
-
-You will need to install some `npm` packages into the web app, as well as into the source folder for the deployed sites.
-
-### Install all dependencies
-
-From the root of the project, call:
-
-```
-# Install npm dependencies into the web app
-cd app/WebHost
-npm install
-
-# Go back to the root of the project
-cd ../..
-
-# Install npm dependencies into the source folder for the deployed websites
-cd websites/src
-npm install
-
-# Go back to the root of the project
-cd ../..
-
-# Install python dependencies for the API Handler
-# Optional: create a Python virtual environment
-python -m venv venv
-source venv/bin/activate
-# Required: install the pip dependencies
-pip install fastapi
-
-```
+Additionally, you will need to call the `setup.sh` script, which installs the various libraries to their respective subdirectories, as well as creating a Python virtual environment. 
 
 ## Clone the demo folder
 
@@ -85,3 +53,11 @@ Also go ahead and check out your live site (after you hit "Publish") at http://1
 # Contributing
 
 You can check out our [CONTRIBUTORS.md](/CONTRIBUTORS.md) and [ROADMAP.md](/ROADMAP.md) files for more information on how to contribute to the project.
+
+---
+
+This project has 3 moving parts: 
+
+1. the web app (the user dashboard where you can edit your webpage), 
+2. the API (which is how the web app can modify real data), 
+3. and the deployed site (which can be deployed using any HTTP mechanism of your choosing).
