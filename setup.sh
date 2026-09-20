@@ -32,6 +32,9 @@ npm install
 # Go back to the root of the project
 cd ../..
 
+cd websites/SLIM-cli
+make
+
 # Install python dependencies for the API Handler
 # Optional: create a Python virtual environment
 echo "Creating a virtual environment for the python API handler program, and installing pip libraries"
