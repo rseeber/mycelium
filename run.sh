@@ -5,7 +5,7 @@ WEBHOST_DIR="app/WebHost";
 
 session=mycelium;
 
-user="exampleSite";
+user="testuser";
 if [ $# -ge 1 ]; then
     user=$1;
 fi
