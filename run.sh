@@ -2,9 +2,17 @@
 
 API_DIR="websites";
 WEBHOST_DIR="app/WebHost";
-HTTP_DIR="websites/dist/exampleSite";
 
 session=mycelium;
+
+user="exampleSite";
+if [ $# -ge 1 ]; then
+    user=$1;
+fi
+
+HTTP_DIR="websites/dist/$user";
+
+echo $HTTP_DIR;
 
 # kill any existing sessions with the same name
 screen -S $session -X quit >> /dev/null;

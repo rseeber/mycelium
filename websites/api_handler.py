@@ -6,8 +6,15 @@ import re
 
 app = FastAPI()
 
-@app.put("/meta/create_account/")
-def create_account(username, email, password):
+@app.post("/meta/create_account/")
+def create_account(opt: dict):
+    try:
+        username = opt["username"]
+        email = opt["email"]
+        password = opt["password"]
+    except KeyError:
+        raise HTTPException(status_code=400, detail="request body must include username, email, and password.")
+
     if not isValidUsername(username):
         raise HTTPException(status_code=403, detail="Username not allowed")
 
@@ -54,8 +61,10 @@ def isValidUsername(username: str):
         return False
     return True
 
-@app.put("/meta/login/")
-def login(username, password, response: Response):
+@app.post("/meta/login/")
+def login(opt: dict, response: Response):
+    username = opt["username"]
+    password = opt["password"]
     if "@" in username:
         email = username
         username = get_username_from_email(email)
@@ -72,8 +81,9 @@ def login(username, password, response: Response):
     # TODO: implement expiry
     expiry = myJson["expiry"]
     response = JSONResponse(content=None)
-    max_age = 30 * 24 * 60 * 60     # 30 days
+    max_age =  100 * 60     # 100 minutes
     response.set_cookie("auth", token, max_age=max_age)
+    response.set_cookie("username", username, max_age=max_age)
     return response
     
 
@@ -96,8 +106,9 @@ def validate_token(token):
 
 def check_auth(site: str, request: Request):
     token = request.cookies.get("auth")
+    info = f"(auth: {token}, site: {site})"
     if token == None:
-        raise HTTPException(status_code=401, detail="Unauthenticated user")
+        raise HTTPException(status_code=401, detail=f"Unauthenticated user {info}")
     username = validate_token(token)
     if username != site:
         raise HTTPException(status_code=403, detail=f"User {username} not authorized to access {site}")

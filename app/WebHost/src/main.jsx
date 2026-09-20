@@ -1,9 +1,8 @@
 import editor_paste_in from "./resources/editor_paste_in.html?raw"
 
-
 let site;
 let currentPage = "index.md";
-let apiStem = "http://localhost:8000";
+let apiStem = getApiStem();
 let startingVals = {};
 
 let editor;
@@ -11,9 +10,20 @@ let editor;
 let frame;
 let frameWindow;
 
+// main()
+if (document.location.pathname == "/"){
+    //this bit is just to initialize everything
+    setSite();
+    let token = _getCookie("auth");
+    if (token == ""){
+        //if we have a valid auth token, redirect to '/'
+        window.location.href = "/login/";
+    }
+}
 
-//this bit is just to initialize everything
-setSite();
+export function getApiStem(){
+    return "http://localhost:8000";
+}
 
 function setEditorValue(content, isInitial=false){
 
@@ -51,7 +61,7 @@ window.setSite = setSite;   //accessible via html
 
 //return the value of a cookie, given its key
 // copied from https://www.w3schools.com/js/js_cookies.asp
-function _getCookie(key) {
+export function _getCookie(key) {
   let name = key + "=";
   let decodedCookie = decodeURIComponent(document.cookie);
   let ca = decodedCookie.split(';');
@@ -117,30 +127,34 @@ function publishSite(){
 }
 window.publishSite = publishSite;   //accessible via html
 
-function api_publish_site() {
+export function api_publish_site() {
     return fetch(apiStem+"/publish/"+site, {
-        method: "PUT"
+        method: "PUT",
+        credentials: "include"
     }).then(function(response) {
         return response.json();
     });
 }
 
-function api_get_page(page){
-    return fetch(apiStem+"/site/"+site+"/"+page)
-    .then(function(response) {
+export function api_get_page(page){
+    return fetch(apiStem+"/site/"+site+"/"+page, {
+        credentials: "include"
+    }).then(function(response) {
         return response.json();
     });
 }
 
-function api_delete_resource(page){
+export function api_delete_resource(page){
     return fetch(apiStem+"/delete/"+site+"/"+page, {
-        method: "PUT"
+        method: "PUT",
+        credentials: "include"
     });
 }
 
-function api_move_page(src, dest){
+export function api_move_page(src, dest){
     return fetch(apiStem+"/move/"+site+"/"+src, {
         method: "PUT",
+        credentials: "include",
         headers: {
             "Content-Type": "application/json",
         },
@@ -148,9 +162,10 @@ function api_move_page(src, dest){
     });
 }
 
-function api_update_page(page, data){
+export function api_update_page(page, data){
     return fetch("http://localhost:8000/update/"+site+"/"+page, {
         method: "PUT",
+        credentials: "include",
         content: "application/text+json",
         headers: {
             "Content-Type": "application/json",
@@ -160,9 +175,10 @@ function api_update_page(page, data){
 }
 
 // file should begin with a slash (eg '/', '/blog', etc)
-function api_create_page(file, data){
+export function api_create_page(file, data){
     return fetch(apiStem+"/create/"+site+file, {
         method: "PUT",
+        credentials: "include",
         headers: {
             "Content-Type": "application/json",
         },
@@ -170,9 +186,10 @@ function api_create_page(file, data){
     });
 }
 
-function api_get_skeleton(page){
-    return fetch(apiStem+"/meta/skeleton/"+site+"/"+page)
-    .then((response) => {
+export function api_get_skeleton(page){
+    return fetch(apiStem+"/meta/skeleton/"+site+"/"+page, {
+        credentials: "include"
+    }).then((response) => {
         return response.json();
     })
     .then((data) => {
@@ -181,28 +198,30 @@ function api_get_skeleton(page){
 }
 
 // returns the json response
-function api_get_templates(){
-    return fetch(apiStem+"/meta/templates/"+site)
-    .then(function(response){
+export function api_get_templates(){
+    return fetch(apiStem+"/meta/templates/"+site, {
+        credentials: "include"
+    }).then(function(response){
         return response.json()
     });
 }
 
 // get the default template, returning it as a string
-function api_get_default_template(){
-    return fetch(
-        apiStem+"/meta/default_template/"+site, 
-        {method : "GET"})
-    .then(response => response.text()
+export function api_get_default_template(){
+    return fetch(apiStem+"/meta/default_template/"+site, {
+        method : "GET",
+        credentials: "include"
+    }).then(response => response.text()
     ).then(function(data){
         data = data.replace(/"/g, "");
         return data;
     });
 }
 
-function api_set_default_template(defaultTemplate){
+export function api_set_default_template(defaultTemplate){
     return fetch(apiStem+"/meta/default_template/"+site, {
         method : "PUT",
+        credentials: "include",
         body: JSON.stringify({"template": defaultTemplate}),
         headers: {
             "Content-Type": "application/json"
@@ -210,10 +229,42 @@ function api_set_default_template(defaultTemplate){
     });
 }
 
-function api_get_index(){
-    return fetch(apiStem+"/meta/index/"+site)
-    .then(function(response){
+export function api_get_index(){
+    return fetch(apiStem+"/meta/index/"+site, {
+        credentials: "include"
+    }).then(function(response){
         return response.json();
+    });
+}
+
+export function api_login(username, password){
+    console.log(username);
+    console.log("what");
+    return fetch(apiStem+"/meta/login/", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({"username": username, "password": password}),
+    }).then(function(response){
+        if (response.status == 200){
+            return true;
+        }
+        else {
+            return false;
+        }
+    });
+}
+
+export function api_create_account(username, email, password){
+    return fetch(apiStem+"/meta/create_account/", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({"username": username, "email": email, "password": password}),
     });
 }
 
@@ -639,6 +690,12 @@ function handleFileIndex(){
 function getFileIndex_andApply(){
     api_get_index()
     .then(function(data){
+        if (Object.keys(data).length == 1 && Object.keys(data).includes("detail")){
+            // It's broken, so don't waste compute trying to do
+            // stuff with the misformed data!
+            console.log("getFileIndex_andApply(): broken data coming from api_get_index()");
+            return;
+        }
         startingVals["fileIndex"] = data;
         return applyFileIndex(data);
     });
