@@ -137,6 +137,10 @@ form {
     font-size: 2em;
 }
 
+#navbar_settings_links input {
+  width: 12em;
+}
+
 .site_editor {
     margin-top: 2em;
     margin-right: 5em;
