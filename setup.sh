@@ -4,6 +4,8 @@ user="testuser"
 email="$user@email"
 password="password"
 
+MYCELIUM_HTML_DIR="/var/www/mycelium"
+
 # Install npm dependencies into the web app
 echo "Installing dependencies for the 'WebHost' web app"
 cd app/WebHost
@@ -20,6 +22,20 @@ if test -f data/emails.json; then
 else
     echo "{}" > data/emails.json
 fi
+
+# check if dist/ exists (as symlink or dir)
+if test -h dist || test -d dist; then
+    echo "dist/ exists"
+else
+    # create the symlink
+    ln -sn $DEFAULT_MYCELIUM_DIR dist
+# now check that the place it links to exists (if it's a symlink)
+if test -h dist; then
+    # this derefences dist and checks if the dir it points to exists
+    if test -d dist; then
+        echo "endpoint of dist/ symlink exists"
+    else
+        mkdir $(readlink dist)
 
 # Go back to the root of the project
 cd ..
