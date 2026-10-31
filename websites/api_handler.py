@@ -4,6 +4,8 @@ import os, subprocess, shutil, time, json
 from pathlib import Path
 import re
 
+import create_invites
+
 app = FastAPI()
 
 @app.post("/meta/create_account/")
@@ -12,8 +14,13 @@ def create_account(opt: dict):
         username = opt["username"]
         email = opt["email"]
         password = opt["password"]
+        invite_code = opt["invite_code"]
     except KeyError:
-        raise HTTPException(status_code=400, detail="request body must include username, email, and password.")
+        raise HTTPException(status_code=400, detail="request body must include username, email, password and invite code.")
+
+    # Make sure the user has a proper invite code before letting them in
+    if not create_invites.consume_invite_code(invite_code):
+        raise HTTPException(status_code=403, detail="Invalid invite code")
 
     if not isValidUsername(username):
         raise HTTPException(status_code=403, detail="Username not allowed")
@@ -38,6 +45,8 @@ def create_account(opt: dict):
     publish_site(username)
 
     return
+
+
 
 # Takes a username and email, adding it to our mini database.
 def append_email_DB(username, email):

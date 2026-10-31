@@ -257,14 +257,14 @@ export function api_login(username, password){
     });
 }
 
-export function api_create_account(username, email, password){
+export function api_create_account(username, email, password, invite_code){
     return fetch(apiStem+"/meta/create_account/", {
         method: "POST",
         credentials: "include",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({"username": username, "email": email, "password": password}),
+        body: JSON.stringify({"username": username, "email": email, "password": password, "invite_code": invite_code}),
     });
 }
 
