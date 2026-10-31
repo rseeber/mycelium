@@ -4,6 +4,9 @@ user="testuser"
 email="$user@email"
 password="password"
 
+# Edit this value to change the default location of where you want
+# HTML output of user websites to be saved
+# (a symlink to this location will be created at `websites/dist`)
 MYCELIUM_HTML_DIR="/var/www/mycelium"
 
 # Install npm dependencies into the web app
