@@ -19,7 +19,11 @@ cd ../..
 
 # Create the `websites/data/` folder and it's `emails.json` file
 cd websites
-mkdir data
+if test -d data || test -h data; then
+	echo "websites/data/ exists"
+else
+	echo "creating websites/data/"
+	mkdir data
 if test -f data/emails.json; then
     echo "emails.json exists"
 else
@@ -53,6 +57,7 @@ cd ../..
 
 # Compile slim
 cd websites/SLIM-cli
+echo "compiling slim..."
 make
 
 # Go back to the root of the project
@@ -70,3 +75,4 @@ pip install fastapi fastapi[standard]
 cd websites
 python3 -c "import api_handler as api; \
 api.create_account({'username':'$user', 'password':'$password', 'email': '$email'})"
+
