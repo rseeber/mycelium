@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Cookie, Response, Request, Depends
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os, subprocess, shutil, time, json
 from pathlib import Path
 import re
@@ -7,6 +8,18 @@ import re
 import create_invites
 
 app = FastAPI()
+
+# Allows fetch() requests from the dashboard page
+# (note: don't include *.selfweb.club lol, that would allow users to do bad stuff)
+allowed_origins = ["http://dashboard.selfweb.club"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True, # Allows cookies to get sent
+    allow_methods=["*"],    # Allow all HTTP methods (such as OPTIONS)
+    allow_headers=["*"],    # Allow all headers
+)
 
 @app.post("/meta/create_account/")
 def create_account(opt: dict):
