@@ -163,7 +163,7 @@ export function api_move_page(src, dest){
 }
 
 export function api_update_page(page, data){
-    return fetch("http://localhost:8000/update/"+site+"/"+page, {
+    return fetch(apiStem+"/update/"+site+"/"+page, {
         method: "PUT",
         credentials: "include",
         content: "application/text+json",
