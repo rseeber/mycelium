@@ -52,7 +52,7 @@ def create_account(opt: dict):
         raise HTTPException(status_code=400, detail="Username alrady taken (email db)")
 
     # Copy the skeleton src/ folder
-    skeleton = "src/demoSite/"
+    skeleton = "src/_skeletonSite/"
     shutil.copytree(skeleton, f"src/{username}")
     # Then do an initial build on that new folder
     publish_site(username)
