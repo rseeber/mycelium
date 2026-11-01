@@ -21,7 +21,7 @@ screen -S $session -X quit >> /dev/null;
 screen -dmS $session;
 
 # Run WebHost
-screen -S $session -X screen -t "WebHost" bash -c "cd $WEBHOST_DIR && npm run dev; bash";
+screen -S $session -X screen -t "WebHost" bash -c "cd $WEBHOST_DIR && npm run preview; bash";
 
 # Serve the page via HTTP
 #

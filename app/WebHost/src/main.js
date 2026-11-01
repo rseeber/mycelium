@@ -409,15 +409,16 @@ function loadTemplate(){
         markedScript.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
         // this is the editor itself
         let editorScript = myDoc.createElement("script");
-        editorScript.src = "/src/markdown-wysiwyg/dist/editor.js";
+        // this makes it so vite resolves and handles this url and script and stuff
+        editorScript.src = new URL("/src/markdown-wysiwyg/dist/editor.js", import.meta.url).href;
         // this is the script that loads the editor in
         let callScript = myDoc.createElement("script");
-        callScript.src = "/src/markdown-wysiwyg/dist/loader.js";
+        callScript.src = new URL("/src/markdown-wysiwyg/dist/loader.js", import.meta.url).href;
         
         //we also need to import the stylesheet for the editor
         let sheet = myDoc.createElement("link");
         sheet.rel = "stylesheet";
-        sheet.href = "/src/markdown-wysiwyg/dist/editor.css";
+        sheet.href = new URL("/src/markdown-wysiwyg/dist/editor.css", import.meta.url).href;
 
         // stick all those nodes into the actual document
         myDoc.head.appendChild(markedScript);

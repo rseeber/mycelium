@@ -1,6 +1,3 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-
 import { api_login, api_create_account, getApiStem, _getCookie } from "./main";
 
 window._getCookie = _getCookie;
