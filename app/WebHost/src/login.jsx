@@ -20,15 +20,13 @@ function getFormData(formName){
     let data = {
         username: formData.get("uname"),
         password: formData.get("psw"),
-        email: formData.get("email")    // undefined if formName is 'login-form'
+        email: formData.get("email"),    // undefined if formName is 'login-form'
+        invite_code: formData.get("code")
     };
     return data;
 }
 
-function doLogin(){
-
-    let data = getFormData('login-form');
-
+function _login(data){
     api_login(data.username, data.password)
     .then(function(success){
         if (success){
@@ -39,16 +37,24 @@ function doLogin(){
         }
     });
 }
+
+function doLogin(){
+
+    let data = getFormData('login-form');
+    _login(data);
+
+}
 window.doLogin = doLogin;
 
 function doSignup(){
     let data = getFormData('signup-form');
 
-    api_create_account(data.username, data.email, data.password)
+    api_create_account(data.username, data.email, data.password, data.invite_code)
     .then(function(success){
         if (success){
-            document.getElementById("signup-success-message").style.display = "initial";
+            //document.getElementById("signup-success-message").style.display = "initial";
             //document.location = "/";
+            _login(data);
         }
         else {
             console.log("Error, invalid login");

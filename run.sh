@@ -24,7 +24,10 @@ screen -dmS $session;
 screen -S $session -X screen -t "WebHost" bash -c "cd $WEBHOST_DIR && npm run dev; bash";
 
 # Serve the page via HTTP
-screen -S $session -X screen -t "HTTP Server" bash -c "cd $HTTP_DIR && python -m http.server 8080; bash";
+#
+# Disabled by default, since most users will want to use their own
+# solution (e.g., Apache2 HTTP server)
+#screen -S $session -X screen -t "HTTP Server" bash -c "cd $HTTP_DIR && python -m http.server 8080; bash";
 
 # Run FastAPI
 screen -S $session -X screen -t "FastAPI" bash -c "cd $API_DIR && fastapi dev api_handler.py; bash";
