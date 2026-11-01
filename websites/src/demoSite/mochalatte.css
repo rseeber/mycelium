@@ -1,0 +1,164 @@
+:root {
+    color-scheme: light dark;
+
+    /* CSS' light-dark() function allows you to set different colours for light and dark mode respectively */
+    /* Recommended reading: https://css-tricks.com/come-to-the-light-dark-side/ */
+    --color-body-background: #B58048;
+    --color-content-background: light-dark(#E8D2B9, #3E000E);
+    --color-body-text: light-dark(#1e0006, #F4F3F8);
+    --color-title: #F4F3F8;
+    --color-heading: light-dark(#785630, #E8D2B9);
+    --color-link: light-dark(#6a4826, #d6b18d);
+
+    --font-family-main: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+    --font-family-headings: Avenir, Montserrat, Corbel, 'URW Gothic', source-sans-pro, sans-serif;
+
+    --content-max-width: 800px;
+    --border-main: 3px solid var(--color-body-text);
+    --border-radius-main: 10px;
+    --shadow-main: 4px 4px 0 #3E000E;
+}
+
+/* General styling */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+* {
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
+    line-height: 1.5;
+    font-family: var(--font-family-main);
+    color: var(--color-body-text);
+    background-color: var(--color-body-background);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-headings);
+    color: var(--color-heading);
+}
+
+a {
+    color: var(--color-link);
+}
+
+input, button, textarea, select {
+    max-width: 100%;
+    border: 0.12em solid var(--color-body-text);
+    background-color: var(--color-content-background);
+    font: inherit;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+:focus {
+    outline: 0.15em solid var(--color-link);
+}
+
+/* Layout container */
+.container {
+    width: 95%;
+    max-width: var(--content-max-width);
+    margin: 20px auto;
+    display: grid;
+    gap: 1em;
+}
+
+/* Header */
+.header {
+    text-align: center;
+}
+
+.header__img {
+    height: 8em;
+}
+
+.header__title {
+    font-size: 2.8em;
+    color: var(--color-title);
+    text-shadow: var(--shadow-main);
+}
+
+/* Navigation bar */
+.navbar {
+    display: grid;
+    place-content: center;
+}
+
+.navbar__links {
+    list-style-type: "";
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7em;
+}
+
+.navbar__links li {
+    background-color: var(--color-content-background);
+    padding: 8px 15px;
+    border: var(--border-main);
+    border-radius: var(--border-radius-main);
+    font-size: 1.15em;
+    font-weight: bold;
+    box-shadow: var(--shadow-main);
+}
+
+.navbar__links li a:focus {
+    outline-offset: 0.2em;
+}
+
+/* Main content */
+main {
+    background-color: var(--color-content-background);
+    font-size: 1.2em;
+    padding: 20px 25px 35px;
+    border: var(--border-main);
+    border-radius: var(--border-radius-main);
+    box-shadow: var(--shadow-main);
+}
+
+.main__title {
+    border-bottom: var(--border-main);
+}
+
+main * + * {
+    margin-block-start: 1em;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    background-color: var(--color-content-background);
+    padding: 18px 25px;
+    border: var(--border-main);
+    border-radius: var(--border-radius-main);
+    box-shadow: var(--shadow-main);
+}
+footer * + * {
+    margin-block-start: 0.5em;
+}
+
+/* Skip to content button */
+/* See: https://kalechips.net/projects/snippets/skip */
+.skip-btn a {
+    position: absolute;
+    display: inline-block;
+    left: 50%;
+    transform: translate(-50%, 0);
+    top: -1000px;
+    overflow: hidden;
+    transition: top 0.5s ease;
+    background: var(--color-content-background);
+    font-size: 1.25rem;
+    font-weight: 700;
+    z-index: 1000;
+    padding: 5px 10px;
+}
+
+.skip-btn a:focus {
+    top: 0;
+    transition: top 0.3s ease;
+}
