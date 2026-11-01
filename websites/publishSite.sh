@@ -21,5 +21,6 @@ echo "clearing $output/* and $output/.*";
 rm -rf $output/*;
 rm -rf $output/.*;
 
-# next, run 11ty
-npx @11ty/eleventy --config=./eleventy.config.js --input=$input --output=$output;
+# next, run 11ty in the input folder
+cd $input
+npx @11ty/eleventy --config=../../eleventy.config.js --output="../../$output";
