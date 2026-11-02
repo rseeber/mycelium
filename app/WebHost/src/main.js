@@ -22,7 +22,7 @@ if (document.location.pathname == "/"){
 }
 
 export function getApiStem(){
-    return "http://dashboard.selfweb.club:8000";
+    return "https://api.dashboard.selfweb.club";
 }
 
 function setEditorValue(content, isInitial=false){
