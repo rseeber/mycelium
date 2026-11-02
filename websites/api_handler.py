@@ -11,7 +11,7 @@ app = FastAPI()
 
 # Allows fetch() requests from the dashboard page
 # (note: don't include *.selfweb.club lol, that would allow users to do bad stuff)
-allowed_origins = ["http://dashboard.selfweb.club"]
+allowed_origins = ["https://dashboard.selfweb.club"]
 
 app.add_middleware(
     CORSMiddleware,
