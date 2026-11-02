@@ -1,7 +1,7 @@
 import { api_login, api_create_account, getApiStem, _getCookie, _addCookie } from "./main";
 
 window._getCookie = _getCookie;
-let token = _getCookie("auth");
+let token = _getCookie("username");
 console.log(token);
 console.log(document.cookie);
 
