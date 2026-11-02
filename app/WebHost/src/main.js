@@ -14,7 +14,7 @@ let frameWindow;
 if (document.location.pathname == "/"){
     //this bit is just to initialize everything
     setSite();
-    let token = _getCookie("auth");
+    let token = _getCookie("username");
     if (token == ""){
         //if we have a valid auth token, redirect to '/'
         window.location.href = "/login/";
