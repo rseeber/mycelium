@@ -77,6 +77,14 @@ export function _getCookie(key) {
   return "";
 }
 
+export function _addCookie(key, value, path="/", max_age=100*60){
+    document.cookie = [
+        encodeURIComponent(key) + "=" + encodeURIComponent(value),
+        "path="+path,
+        "max-age=" + max_age
+    ]
+}
+
 function prefillTemplateSelector(templates, selectorID, excludeDefault=false) {
     for (let i = 0; i < templates.length; i++) {
         // the filename of the template

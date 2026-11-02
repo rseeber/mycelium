@@ -1,4 +1,4 @@
-import { api_login, api_create_account, getApiStem, _getCookie } from "./main";
+import { api_login, api_create_account, getApiStem, _getCookie, _addCookie } from "./main";
 
 window._getCookie = _getCookie;
 let token = _getCookie("auth");
@@ -27,6 +27,8 @@ function _login(data){
     api_login(data.username, data.password)
     .then(function(success){
         if (success){
+            // set the username cookie
+            _addCookie("username", data.username);
             document.location = "/";
         }
         else {
