@@ -104,8 +104,9 @@ def login(opt: dict, response: Response):
     expiry = myJson["expiry"]
     response = JSONResponse(content=None)
     max_age =  100 * 60     # 100 minutes
-    response.set_cookie("auth", token, max_age=max_age)
-    response.set_cookie("username", username, max_age=max_age)
+    response.set_cookie("auth", token, httponly=True, secure=True, samesite=None, max_age=max_age)
+    # Note: we don't set httponly for the username, since a client script needs to access it
+    response.set_cookie("username", username, secure=True, samesite=None, max_age=max_age)
     return response
     
 
