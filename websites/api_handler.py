@@ -101,11 +101,11 @@ def isValidUsername(username: str):
 
 @app.post("/meta/login/")
 def login(opt: dict, response: Response):
+    logger.write(f"/meta/login/")
     try:
         username = opt["username"]
         password = opt["password"]
     except KeyError:
-        logger.write(f"/meta/login/")
         logger.write("Request with invalid opt. Returning 400.\n")
         logger.write(f"opt.keys() = {opt.keys()}")
         raise HTTPException(status_code=400, detail="request body must include username and password.")
