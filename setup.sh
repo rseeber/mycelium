@@ -30,6 +30,14 @@ if test -f data/emails.json; then
 else
     echo "{}" > data/emails.json
 fi
+# Create the log directory as well
+if test -d log || test -h log; then
+	echo "> websites/log/ exists"
+else
+	echo "> creating websites/log/"
+	mkdir log
+fi
+
 
 # check if dist/ exists (as symlink or dir)
 if test -h dist || test -d dist; then

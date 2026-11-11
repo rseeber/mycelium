@@ -5,9 +5,10 @@ import os, subprocess, shutil, time, json
 from pathlib import Path
 import re
 
-import create_invites
+import create_invites, logger
 
 app = FastAPI()
+logger.setFile("log/log.txt")
 
 # Allows fetch() requests from the dashboard page
 # (note: don't include *.selfweb.club lol, that would allow users to do bad stuff)
@@ -29,33 +30,48 @@ def create_account(opt: dict):
         password = opt["password"]
         invite_code = opt["invite_code"]
     except KeyError:
+        logger.write(f"/meta/create_account/")
+        logger.write("Request with invalid opt. Returning 400.\n")
+        logger.write(f"opt.keys() = {opt.keys()}")
         raise HTTPException(status_code=400, detail="request body must include username, email, password and invite code.")
+    logger.write(f"/meta/create_account/")
+    logger.write(f"username = {username}, invite code = {invite_code}")
 
     # Make sure the user has a proper invite code before letting them in
     if not create_invites.consume_invite_code(invite_code):
-        raise HTTPException(status_code=403, detail="Invalid invite code")
+        detail = "Invalid invite code"
+        logger.write(f"{detail}\n")
+        raise HTTPException(status_code=403, detail=detail)
 
     if not isValidUsername(username):
-        raise HTTPException(status_code=403, detail="Username not allowed")
+        detail = "Username not allowed"
+        logger.write(detail+"\n")
+        raise HTTPException(status_code=403, detail=detail)
 
     # Call slim addUser {username} {password}
     output = subprocess.run(["SLIM-cli/slim", "addUser", username, password])
 
     # Error checking
     if output.returncode != 0:
-        raise HTTPException(status_code=400, detail="Username alrady taken (passwd db)")
+        detail = "Username alrady taken (passwd db)"
+        logger.write(detail+"\n")
+        raise HTTPException(status_code=400, detail=detail)
 
     # Add the username and email to a database
     if append_email_DB(username, email) < 0:
         # in theory, this error is never reached, as the first one *should* 
         # get triggered if there's a problem.
-        raise HTTPException(status_code=400, detail="Username alrady taken (email db)")
+        detail = "Username alrady taken (email db)"
+        logger.write(detail+"\n")
+        raise HTTPException(status_code=400, detail=detail)
 
     # Copy the skeleton src/ folder
     skeleton = "src/_skeletonSite/"
     shutil.copytree(skeleton, f"src/{username}")
     # Then do an initial build on that new folder
     publish_site(username)
+
+    logger.write(f"Account for {username} successfully created.")
 
     return
 
@@ -85,19 +101,30 @@ def isValidUsername(username: str):
 
 @app.post("/meta/login/")
 def login(opt: dict, response: Response):
-    username = opt["username"]
-    password = opt["password"]
+    try:
+        username = opt["username"]
+        password = opt["password"]
+    except KeyError:
+        logger.write(f"/meta/login/")
+        logger.write("Request with invalid opt. Returning 400.\n")
+        logger.write(f"opt.keys() = {opt.keys()}")
+        raise HTTPException(status_code=400, detail="request body must include username and password.")
+    logger.write(f"username = {username}")
     if "@" in username:
         email = username
         username = get_username_from_email(email)
         if username == -1:
             #error
-            raise HTTPException(status_code=400)
+            logger.write(f"couldn't extract username from email, '{email}'")
+            raise HTTPException(status_code=400, detail=f"Couldn't extract username from provided email \"{email}\"")
+        logger.write(f"converted email '{email}' to username '{username}'")
     # loginAsUser 
     output = subprocess.run(["SLIM-cli/slim", "loginAsUser", username, password], stdout=subprocess.PIPE)
     if output.returncode != 0:
         # error
+        logger.write(f"invalid login details for '{username}'\n")
         raise HTTPException(status_code=400, detail="invalid username or password")
+    logger.write(f"user '{username}' successfully logged in")
     myJson = json.loads(output.stdout)
     token = myJson["token"]
     # TODO: implement expiry
