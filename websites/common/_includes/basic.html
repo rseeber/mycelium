@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://selfweb.club/css/basic.css">
+    <title>{{title}}</title>
+</head>
+<body>
+    <div class="big-box">
+        <div id="header" class="panel">
+            <div id="header-row">
+                <h1>{{data.site}}</h1>
+            </div>
+            <nav>
+
+                <a href=
+
+                {%- for item in data.links -%}
+                {%- if item.text -%}
+                "{{ item.url }}">{{ item.text }}</a>{% unless forloop.last %}<a href={% endunless %}
+                {%- endif -%}
+                {%- endfor -%}
+
+                <!--
+                Looks like this:
+                It's very important not to newline between a tags
+                <a 
+                href="/">Home</a><a 
+                href="/blog/">Blog</a><a 
+                href="/garden/">Garden</a><a 
+                href="/now/">Now</a><a 
+                href="/about/">About</a>
+                -->
+            </nav>
+        </div>
+        <div class="panel">
+            <main>
+                {{content}}
+            </main>
+        </div>
+    </div>
+</body>
+</html>

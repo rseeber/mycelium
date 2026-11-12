@@ -1,7 +1,9 @@
 {
     "_schema": {
+        "site": null,
         "links": {"url": null, "text": null}
     },
+    "site": "My Website Name",
     "links" : [
         { "url": "/", "text": "Home" },
         { "url": "/blog/", "text": "Blog" },

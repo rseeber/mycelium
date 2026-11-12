@@ -1,0 +1,57 @@
+:root{
+    --color-content-background: grey
+}
+
+body {
+    margin: 0;
+    background-color: burlywood;
+}
+
+.big-box {
+    margin: auto;
+    margin-top: 2px;
+    width: 60em;
+    max-width: 99%;
+    border: 0px dashed black;
+}
+
+.panel {
+    border: 2px solid chocolate;
+    margin-bottom: 0.5em;
+    background-color: white;
+    padding: 0.5em;
+    padding-top: 0;
+}
+
+#header-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+#header > nav {
+    /*
+    margin: auto;
+    width: max-content;
+    */
+
+}
+
+nav > a {
+    background-color: var(--link-bg);
+    text-decoration: none;
+    padding: 0.15em;
+    padding-left: 0.8em;
+    padding-right: 0.8em;
+    font-size: 1.25em;
+    display: inline-block;
+    border-right: 1px dashed white;
+}
+nav > a:hover {
+    /*color: yellow;
+    */
+    font-style: italic;
+}
+nav > a:last-child {
+    border-right: none;
+}
