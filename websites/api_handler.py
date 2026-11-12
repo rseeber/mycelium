@@ -49,7 +49,9 @@ def create_account(opt: dict):
         raise HTTPException(status_code=403, detail=detail)
 
     # Call slim addUser {username} {password}
-    output = subprocess.run(["SLIM-cli/slim", "addUser", username, password])
+    command = ["SLIM-cli/slim", "addUser", username, password]
+    logger.write("$> " + " ".join(command)) #print the command
+    output = subprocess.run(command)
 
     # Error checking
     if output.returncode != 0:
@@ -71,7 +73,7 @@ def create_account(opt: dict):
     # Then do an initial build on that new folder
     publish_site(username)
 
-    logger.write(f"Account for {username} successfully created.")
+    logger.write(f"Account for {username} successfully created.\n")
 
     return
 
@@ -119,7 +121,9 @@ def login(opt: dict, response: Response):
             raise HTTPException(status_code=400, detail=f"Couldn't extract username from provided email \"{email}\"")
         logger.write(f"converted email '{email}' to username '{username}'")
     # loginAsUser 
-    output = subprocess.run(["SLIM-cli/slim", "loginAsUser", username, password], stdout=subprocess.PIPE)
+    command = ["SLIM-cli/slim", "loginAsUser", username, password]
+    logger.write("$> " + " ".join(command))
+    output = subprocess.run(command, stdout=subprocess.PIPE)
     if output.returncode != 0:
         # error
         logger.write(f"invalid login details for '{username}'\n")
@@ -144,7 +148,9 @@ def get_username_from_email(email):
 
 # returns the username associated with the token, or raises a 401 error if not found
 def validate_token(token):
-    output = subprocess.run(["SLIM-cli/slim", "validateToken", str(token)], stdout=subprocess.PIPE)
+    command = ["SLIM-cli/slim", "validateToken", str(token)]
+    logger.write("$> " + " ".join(command))
+    output = subprocess.run(command, stdout=subprocess.PIPE)
     if output.returncode != 0:
         # error
         raise HTTPException(status_code=401, detail="Invalid login token")

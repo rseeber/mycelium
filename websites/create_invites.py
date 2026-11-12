@@ -61,8 +61,8 @@ def consume_invite_code(code: int)-> bool:
         # check if the code is in the invites
         found = False
         # iterate through each invite line
-        print(f"Looking for {code}")
-        print(f"type = {type(code)}")
+        #print(f"Looking for {code}")
+        #print(f"type = {type(code)}")
         for line in invites:
             # remove the comments:
             # "123 # foo" becomes "123 "
@@ -70,16 +70,16 @@ def consume_invite_code(code: int)-> bool:
             i = line.find("#")
             if i >= 0:
                 line_code = line[:i]
-                print(f"Converting '{line}' to '{line_code}'")
+                #print(f"Converting '{line}' to '{line_code}'")
             # non-numeric lines (including empty lines)
             try:
                 line_code = int(line_code)
             except ValueError:
                 continue
-            print(f"line_code = {line_code}; {line_code} == {code}: {line_code == code}")
+            #print(f"line_code = {line_code}; {line_code} == {code}: {line_code == code}")
             # convert to int, and check for equality with the given code
             if line_code == code:
-                print("Found!!")
+                #print("Found!!")
                 invites.remove(line)
                 found = True
                 break

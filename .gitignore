@@ -16,3 +16,4 @@ websites/dist
 websites/package-lock.json
 
 websites/data
+websites/log
